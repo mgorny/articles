@@ -1,0 +1,11 @@
+59364	.tar.xz
+71864	squashfs, xz-compressed
+98412	squashfs, lzo-compressed
+102300	.tar.lzo
+386834	reiserfs (v3) // -s 513 / -o nolog
+436540	tar
+516096	btrfs, lzo compression enabled
+555208	btrfs // -m single -O skinny-metadata / mount -o nodatasum
+738000	tmpfs
+898080	ext4 -O ^extent
+913564	ext4

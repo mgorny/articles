@@ -1,0 +1,34 @@
+1) unpack+rsync+pack
+
+unpack 17.044
+rsync 41.965
+pack 41.614
+
+Total bytes sent: 740,764
+Total bytes received: 35,198,030
+
+2) unionfs
+
+rsync 59.790
+pack 83.459
+
+3) diffball
+
+fetch 3.092
+apply 18.461 # 4.215 on tmpfs
+update 2.866
+pack 45.834
+
+4) diffball lzo
+
+fetch 3.092
+decomp 2.568
+apply 3.867
+update 3.2
+pack 44.894
+compress 5.5
+
+5) sqfs delta
+
+fetch 22.494
+apply 7.6
