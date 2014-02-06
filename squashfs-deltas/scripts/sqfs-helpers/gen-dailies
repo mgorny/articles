@@ -1,0 +1,26 @@
+#!/bin/bash
+
+files=( data/*.sqfs )
+
+for (( i = ${#files[@]} - 2; i >= 0; i-- )); do
+	f=${files[${i}]}
+	f2=${files[$(( ${i} + 1))]}
+
+	date1=${f%.sqfs}
+	date1=${date1#data/portage-}
+	oldfn=${f##*/}
+
+	date2=${f2%.sqfs}
+	date2=${date2#data/portage-}
+	newfn=${f2##*/}
+
+	out=snapshot-${date1}-${date2}.sqfs.vcdiff
+
+	echo "all: ${out}"
+	echo "${out}: ${oldfn} ${newfn}"
+	echo "	xdelta3 -9 -S djw -e -s $< ${newfn} \$@"
+#	echo "	[ \$\$(stat -c %s \$@) -lt \$\$(stat -c %s ${newfn}) ]"
+done >data/Makefile
+
+make ${MAKEOPTS:--j4} -C data
+rm data/Makefile

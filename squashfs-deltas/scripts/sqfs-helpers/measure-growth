@@ -1,0 +1,49 @@
+#!/bin/bash
+
+start=${1}
+out=${2}
+
+[[ ${start} ]]
+[[ ${out} ]]
+
+print "first\tnext\tsize\tdelta-size\n" > "${out}"
+
+files=( data/*.sqfs )
+
+tempfile=$(mktemp)
+
+set -ex
+
+started=0
+for f in "${files[@]}"; do
+	if [[ ${f} == ${start} ]]; then
+
+		started=1
+		cp "${f}" "${tempfile}"
+		printf '%s\t%s\t%d\n' \
+			"${start}" "${f}" "$(stat --format=%s "${tempfile}")" \
+			| tee -a "${out}"
+
+	elif [[ ${started} == 1 ]]; then
+
+		prevtemp=$(mktemp)
+		cp "${tempfile}" "${prevtemp}"
+
+		tempdir=$(mktemp -d)
+		unsquashfs -d "${tempdir}" -f "${f}"
+		mksquashfs "${tempdir}" "${tempfile}" -comp lzo -no-xattrs \
+			-force-uid portage -force-gid portage -root-becomes '~'
+		rm -r "${tempdir}"
+
+		deltatemp=$(mktemp)
+		xdelta3 -9 -S djw -e -f -s "${prevtemp}" "${tempfile}" "${deltatemp}"
+		rm "${prevtemp}"
+
+		printf '%s\t%s\t%d\t%d\n' "${start}" "${f}" \
+			"$(stat --format=%s "${tempfile}")" \
+			"$(stat --format=%s "${deltatemp}")" \
+			| tee -a "${out}"
+		rm "${deltatemp}"
+
+	fi
+done

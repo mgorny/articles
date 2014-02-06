@@ -1,0 +1,39 @@
+#!/bin/bash
+
+if [[ ! ${1} || ! ${2} ]]; then
+	echo "Usage: ${0} first.sqfs second.sqfs" >&2
+	exit 1
+fi
+
+if [[ ${1} != data/portage-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].sqfs ]]; then
+	echo "The squashfs name looks weird. It should be like:"
+	echo "	portage-XXXXYYZZ.sqfs"
+	echo "with XYZ being digits. It is:"
+	echo "	${1#data/}"
+	exit 1
+fi
+
+if [[ ${2} != data/portage-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].sqfs ]]; then
+	echo "The squashfs name looks weird. It should be like:"
+	echo "	portage-XXXXYYZZ.sqfs"
+	echo "with XYZ being digits. It is:"
+	echo "	${2#data/}"
+	exit 1
+fi
+
+date1=${1%.sqfs}
+date1=${date1#data/portage-}
+date2=${2%.sqfs}
+date2=${date2#data/portage-}
+
+out=data/snapshot-${date1}-${date2}.sqfs.vcdiff
+
+echo "${date1} -> ${date2} ..."
+
+set -ex
+
+xdelta3 -9 -S djw -e -s "${1}" "${2}" "${out}"
+
+set +ex
+
+echo "Delta written to ${out}."

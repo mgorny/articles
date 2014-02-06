@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [[ ! ${1} ]]; then
+	echo "Usage: ${0} input.sqfs" >&2
+	exit 1
+fi
+
+in=${1}
+out=${in}.unc
+tmpdir=$(mktemp -d /tmp/tar2sqfs.XXXXXX)
+
+#absdistdir=$( cd "${in%/*}"; pwd )
+#portdir="${tmpdir}/.avfs/${absdistdir#/}/${in##*/}#/portage"
+portdir=${tmpdir}/portage
+
+set -ex
+
+#export HOME=${tmpdir}
+
+#mountavfs
+unsquashfs -d "${portdir}" -f "${in}"
+#archivemount -o readonly "${in}" "${tmpdir}"
+mksquashfs "${portdir}" "${out}" -comp lzo -noI -noD -noF -noX -no-xattrs \
+	-force-uid portage -force-gid portage
+#fusermount -u "${tmpdir}"
+#umountavfs
+rm -r "${tmpdir}"
+
+set +ex
+
+echo "SquashFS written to ${out}."

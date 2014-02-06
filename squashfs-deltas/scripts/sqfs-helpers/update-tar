@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# keep a lock to allow parallel runs
+exec 4>>data/lock
+flock -x 4
+
+files=( data/*.tar )
+
+input=${files[-1]}
+
+if [[ ${input} != data/portage-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].tar ]]; then
+	echo "The tarball name looks weird. It should be like:"
+	echo "	portage-XXXXYYZZ.tar"
+	echo "with XYZ being digits. It is:"
+	echo "	${input#data/}"
+	exit 1
+fi
+
+currdate=${input%.tar}
+currdate=${currdate#data/portage-}
+
+nextdate=$(date --date="${currdate} tomorrow" +%Y%m%d)
+
+if [[ ! ${nextdate} ]]; then
+	echo "Unable to determine next date with currdate = ${currdate}."
+	exit 1
+fi
+
+output=${input/${currdate}/${nextdate}}
+
+tempfile=$(mktemp)
+
+echo "${input} -> ${output} ..."
+set -ex
+
+[[ ! -e ${output%.tar}.sqfs ]]
+curl "http://distfiles.gentoo.org/snapshots/deltas/snapshot-${currdate}-${nextdate}.patch.bz2" \
+	| bzip2 -c -d > "${tempfile}"
+
+patcher -v "${input}" "${tempfile}" "${output}"
+rm "${tempfile}"
+
+flock -u 4
+
+#./tar2sqfs "${output}"
+#./deltasqfs "${input%.tar}".sqfs "${output%.tar}".sqfs
+
+rm "${input}"
