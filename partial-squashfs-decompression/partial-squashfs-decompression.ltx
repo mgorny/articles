@@ -1,0 +1,110 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{polyglossia}
+\usepackage{indentfirst}
+\usepackage[top=1cm, bottom=1cm, inner=2cm, outer=1cm,
+	twoside, includefoot]{geometry}
+%\usepackage[table]{xcolor}
+%\usepackage{subcaption}
+%\usepackage{float}
+\usepackage{amsmath}
+\usepackage[xetex,breaklinks,bookmarks]{hyperref}
+\usepackage[hypcap]{caption}
+\usepackage{titlesec}
+\usepackage{siunitx}
+%\usepackage{tabularx}
+%\usepackage{array}
+%\usepackage{ulem}
+%\usepackage{setspace}
+%\usepackage{bigstrut}
+%\usepackage{booktabs}
+%\usepackage{multirow}
+%\usepackage{ctable}
+%\usepackage{fancyvrb}
+\usepackage{tikz}
+\usepackage{pgfplots}
+%\usepackage{listings}
+%\usepackage{adjustbox}
+%\usepackage{wrapfig}
+%\usepackage{subcaption}
+%\usepackage{longtable}
+
+\usepgfplotslibrary{dateplot}
+\usepgfplotslibrary{units}
+
+\pgfplotsset{compat=1.8,
+	width=0.9\textwidth,
+	height=0.45\textheight,
+	legend cell align=left,
+	legend pos=north east,
+	axis x line=middle,
+	axis y line=left,
+	grid style={color=gray!70}, % major grid
+	minor grid style={color=gray!30}
+}
+
+\sisetup{forbid-literal-units,
+	binary-units=true,
+%	output-decimal-marker={,},
+	group-digits=false,
+	per-mode=fraction,
+	free-standing-units=true,
+	unit-optional-argument=true,
+	inter-unit-product={},
+	range-phrase={ -- }}
+
+%\pgfkeys{/pgf/number format/.cd,
+%	fixed,
+%	use comma,
+%	1000 sep={}}
+
+\setdefaultlanguage{english}
+\linespread{1.5}
+
+\author{Michał Górny}
+\title{Reducing SquashFS delta size through partial decompression}
+
+\begin{document}
+
+%\numberwithin{figure}{section}
+%\numberwithin{table}{section}
+%\numberwithin{equation}{section}
+
+\maketitle
+
+\section{Introduction}
+
+In a~previous article titled `using deltas to speed up SquashFS ebuild
+repository updates', the~author has considered benefits of~using binary
+deltas to update SquashFS images. The~proposed method has proven very
+efficient in~terms of~disk I/O, memory and~CPU time use. However,
+the~relatively large size of~deltas made network bandwidth
+a~bottleneck.
+
+The~rough estimations done at the~time proved that this is not a~major
+issue for a~common client with a~moderate-bandwidth link such as~ADSL.
+Nevertheless, the~size is an~inconvenience both to clients and~to mirror
+providers. Assuming that there is an~upper bound on disk space consumed
+by~snapshots, the~extra size reduces the~number of~snapshots stored
+on~mirrors, and~therefore shortens the~supported update period.
+
+The~most likely causes for the~excessive delta size include
+the~complexity of~the~correlation between input and~compressed output.
+Changes in~input files are likely to cause much larger changes
+in~the~SquashFS output that the~tested delta algorithms fail to express
+efficiently.
+
+For~example, in~the~LZ family of~compression algorithms, a~change
+in~input stream may affect the~contents of the~dictionary and~therefore
+the~output stream following it. In~block-based compressors such
+as~bzip2, a~change in~input may shift all the~following data moving it
+across block boundaries. As a~result, the~contents and~compressed output
+of~all blocks following it change.
+
+Since SquashFS splits the~input into multiple blocks that are compressed
+separately, the~scope of~this issue is much smaller. Nevertheless,
+small changes occuring in~multiple blocks are able to grow delta twice
+as~large as it would be if~the~data was not compressed. In this paper,
+the~author explores the~possibility of~introducing a~transparent
+decompression in the~delta generation process to~reduce the~delta size.
+
+\end{document}
