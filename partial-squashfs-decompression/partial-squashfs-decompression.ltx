@@ -102,9 +102,59 @@ of~all blocks following it change.
 
 Since SquashFS splits the~input into multiple blocks that are compressed
 separately, the~scope of~this issue is much smaller. Nevertheless,
-small changes occuring in~multiple blocks are able to grow delta twice
+small changes occurring in~multiple blocks are able to grow delta twice
 as~large as it would be if~the~data was not compressed. In this paper,
 the~author explores the~possibility of~introducing a~transparent
 decompression in the~delta generation process to~reduce the~delta size.
+
+
+\section{Practical aspects of SquashFS recompression}
+
+The~standard suite of~SquashFS tools do not provide a~direct way
+of~recompressing or rebuilding the~filesystem directly. Obtaining
+the~uncompressed version of the~archive can be achieved via unpacking
+(or~mounting) the~original image and~packing it again, with all
+compression options disabled. Recompressing it afterwards requires
+another unpack-repack cycle.
+
+This solution is both time- and~memory-consuming, and~therefore
+very inefficient. In fact, applying the~delta to unpacked files rather
+than the~intermediate image would save one cycle, and~likely result
+in~smaller delta. Therefore, there is no point in~exploring use
+of~SquashFS tools to repack the~image.
+
+Developing a~dedicated tool to directly transform a~SquashFS image
+to~another compression method is an~alternative. However, the~filesystem
+format is very complex and~poorly documented. Therefore creating
+a~tool that would be~able to create a~fully-compliant intermediate
+filesystem would be hard and~time-consuming. The~process itself would
+also be~unnecessarily complex since the~intermediate image would only
+be~used for delta construction purposes.
+
+Instead, the~author decided to write a~tool that would expand
+the~compressed filesystem blocks without maintaining compliance with
+the~filesystem format. The~intermediate image would only be~used
+for~delta construction and~file reconstruction, and~the~resulting file
+would be packed back into a~fully-compliant SquashFS.
+
+This approach imposes two important requirements on the~process.
+Firstly, the~delta needs to contain both changes to the~expanded
+filesystem data and~to its structures. Secondly, the~recompression
+process must produce compressed output of~the~same length (or~shorter,
+if~padding is possible) as the~original image. Otherwise,
+the~reconstructed image would simply be~invalid.
+
+While this is already an~improvement over the~earlier considerations, it
+could still be~improved. Most importantly, there is no real point
+in~recompressing blocks that did not change between the~two images since
+the~delta would be as~efficient on~the~compressed data. Therefore,
+the~author decided to expand only the~blocks that are unique to~either
+of~the~files.
+
+This choice requires even more deterministic compression algorithm.
+Since each data block may be used compressed and~uncompressed
+in~different deltas, it is necessary for~the~compressed output to
+be~byte-exact with the~reference snapshot. Otherwise, the~deltas may
+produce randomly malformed output on~subsequent updates.
 
 \end{document}
