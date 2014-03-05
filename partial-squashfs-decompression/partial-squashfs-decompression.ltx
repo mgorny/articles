@@ -87,74 +87,629 @@ providers. Assuming that there is an~upper bound on disk space consumed
 by~snapshots, the~extra size reduces the~number of~snapshots stored
 on~mirrors, and~therefore shortens the~supported update period.
 
-The~most likely causes for the~excessive delta size include
-the~complexity of~the~correlation between input and~compressed output.
-Changes in~input files are likely to cause much larger changes
-in~the~SquashFS output that the~tested delta algorithms fail to express
-efficiently.
+The~most likely cause for the~excessive delta size is the~complexity
+of~correlation between input and~compressed output.  Changes in~input
+files are likely to cause much larger changes in~the~SquashFS output
+that the~tested delta algorithms fail to express efficiently.
 
 For~example, in~the~LZ family of~compression algorithms, a~change
 in~input stream may affect the~contents of the~dictionary and~therefore
 the~output stream following it. In~block-based compressors such
 as~bzip2, a~change in~input may shift all the~following data moving it
-across block boundaries. As a~result, the~contents and~compressed output
-of~all blocks following it change.
+across block boundaries. As a~result, the~contents of~all the~blocks
+following it change, and~therefore the~compressed output for~each
+of~them.
 
 Since SquashFS splits the~input into multiple blocks that are compressed
-separately, the~scope of~this issue is much smaller. Nevertheless,
-small changes occurring in~multiple blocks are able to grow delta twice
-as~large as it would be if~the~data was not compressed. In this paper,
-the~author explores the~possibility of~introducing a~transparent
-decompression in the~delta generation process to~reduce the~delta size.
+separately, the~scope of~this issue is much smaller than in~plain
+tarballs. Nevertheless, small changes occurring in~multiple blocks are
+able to grow delta two to~four times as~large as it would be if~the~data
+was not compressed. In this paper, the~author explores the~possibility
+of~introducing a~transparent decompression in the~delta generation
+process to~reduce the~delta size.
 
 
-\section{Practical aspects of SquashFS recompression}
+\clearpage
+\section{Theory of delta generation and~application}
 
-The~standard suite of~SquashFS tools do not provide a~direct way
-of~recompressing or rebuilding the~filesystem directly. Obtaining
-the~uncompressed version of the~archive can be achieved via unpacking
-(or~mounting) the~original image and~packing it again, with all
-compression options disabled. Recompressing it afterwards requires
-another unpack-repack cycle.
+\begin{figure}[ht]
+	\centering
 
-This solution is both time- and~memory-consuming, and~therefore
-very inefficient. In fact, applying the~delta to unpacked files rather
-than the~intermediate image would save one cycle, and~likely result
-in~smaller delta. Therefore, there is no point in~exploring use
-of~SquashFS tools to repack the~image.
+	\begin{tikzpicture}[y=1.25cm,x=1.25cm]
+		\begin{scope}[dashed, gray]
+			\draw (5,1.25) -- ++(0,-3);
+			\draw (10,1.25) -- ++(0,-3);
+		\end{scope}
 
-Developing a~dedicated tool to directly transform a~SquashFS image
-to~another compression method is an~alternative. However, the~filesystem
-format is very complex and~poorly documented. Therefore creating
-a~tool that would be~able to create a~fully-compliant intermediate
-filesystem would be hard and~time-consuming. The~process itself would
-also be~unnecessarily complex since the~intermediate image would only
-be~used for delta construction purposes.
+		\begin{scope}[below]
+			\node at (2.5,1.25) {input files};
+			\node at (7.5,1.25) {intermediate files};
+			\node at (12.5,1.25) {output files};
+		\end{scope}
 
-Instead, the~author decided to write a~tool that would expand
-the~compressed filesystem blocks without maintaining compliance with
-the~filesystem format. The~intermediate image would only be~used
-for~delta construction and~file reconstruction, and~the~resulting file
-would be packed back into a~fully-compliant SquashFS.
+		\begin{scope}[every node/.style={
+				inner sep=3mm,
+				rectangle,
+				very thick,
+				top color=white,
+				minimum width=5cm
+		}]
+			\begin{scope}[every node/.append style={
+					draw=green!50!black!50,
+					bottom color=green!50!black!20
+			}]
+				\node (sf) at (2.5,0) {source file};
+				\node (tf) at (2.5,-1) {target file};
+			\end{scope}
 
-This approach imposes two important requirements on the~process.
-Firstly, the~delta needs to contain both changes to the~expanded
-filesystem data and~to its structures. Secondly, the~recompression
-process must produce compressed output of~the~same length (or~shorter,
-if~padding is possible) as the~original image. Otherwise,
-the~reconstructed image would simply be~invalid.
+			\begin{scope}[every node/.append style={
+					draw=blue!50!black!50,
+					bottom color=blue!50!black!20
+			}]
+				\node (esf) at (7.5,0) {expanded source file};
+				\node (etf) at (7.5,-1) {expanded target file};
+			\end{scope}
 
-While this is already an~improvement over the~earlier considerations, it
-could still be~improved. Most importantly, there is no real point
-in~recompressing blocks that did not change between the~two images since
-the~delta would be as~efficient on~the~compressed data. Therefore,
-the~author decided to expand only the~blocks that are unique to~either
-of~the~files.
+			\begin{scope}[every node/.append style={
+					draw=red!50!black!50,
+					bottom color=red!50!black!20
+			}]
+				\node (pf) at (12.5,-.5) {patch file};
+			\end{scope}
+		\end{scope}
 
-This choice requires even more deterministic compression algorithm.
-Since each data block may be used compressed and~uncompressed
-in~different deltas, it is necessary for~the~compressed output to
-be~byte-exact with the~reference snapshot. Otherwise, the~deltas may
-produce randomly malformed output on~subsequent updates.
+		\begin{scope}[-stealth, thick]
+			\draw (sf) to (esf);
+			\draw (tf) to (etf);
+
+			\path (pf.west) ++(0,.05) coordinate (pf1);
+			\path (pf.west) ++(0,-.05) coordinate (pf2);
+
+			\path (esf.east) ++(0,-.45) -- (pf1)
+				coordinate[midway] (mid1);
+			\path (esf.east) ++(0,-.55) -- (pf2)
+				coordinate[midway] (mid2);
+
+			\draw (esf.east) -| (mid1) -- (pf1);
+			\draw (etf.east) -| (mid2) -- (pf2);
+		\end{scope}
+	\end{tikzpicture}
+
+	\caption{Outline of~delta generation procedure}
+	\label{fig:delta gen}
+\end{figure}
+
+A~rough outline of~delta generation has been presented
+on~figure~\ref{fig:delta gen}. The~input of~the~procedure consists
+of~two files: the~source file that the~client is supposed to~have
+already, and~the~target file that the~client is going to~reconstruct
+using the~delta. The~output is a~patch (delta) file that the~client
+needs to download in~order to~perform the~reconstruction.
+
+The~additional decompression step that is going to~increase the~delta
+effectiveness introduces two intermediate `expanded' files. Those files
+are created through decompressing data blocks in~input files, and~are
+used directly as input to the~delta generation procedure.
+
+\begin{figure}[ht]
+	\centering
+
+	\begin{tikzpicture}[y=1.25cm,x=1.25cm]
+		\begin{scope}[dashed, gray]
+			\draw (5,1.25) -- ++(0,-3);
+			\draw (10,1.25) -- ++(0,-3);
+		\end{scope}
+
+		\begin{scope}[below]
+			\node at (2.5,1.25) {input files};
+			\node at (7.5,1.25) {intermediate files};
+			\node at (12.5,1.25) {output files};
+		\end{scope}
+
+		\begin{scope}[every node/.style={
+				inner sep=3mm,
+				rectangle,
+				very thick,
+				top color=white,
+				minimum width=5cm
+		}]
+			\begin{scope}[every node/.append style={
+					draw=green!50!black!50,
+					bottom color=green!50!black!20
+			}]
+				\node (sf) at (2.5,0) {source file};
+				\node (tf) at (12.5,-.5) {target file};
+			\end{scope}
+
+			\begin{scope}[every node/.append style={
+					draw=blue!50!black!50,
+					bottom color=blue!50!black!20
+			}]
+				\node (esf) at (7.5,0) {expanded source file};
+				\node (etf) at (7.5,-1) {expanded target file};
+			\end{scope}
+
+			\begin{scope}[every node/.append style={
+					draw=red!50!black!50,
+					bottom color=red!50!black!20
+			}]
+				\node (pf) at (2.5,-1) {patch file};
+			\end{scope}
+		\end{scope}
+
+		\begin{scope}[-stealth, thick]
+			\path (esf.west) ++(0,.05) coordinate (esf1);
+			\path (esf.west) ++(0,-.05) coordinate (esf2);
+
+			\path (etf.west) ++(0,.05) coordinate (etf1);
+			\path (etf.west) ++(0,-.05) coordinate (etf2);
+
+			\path (pf.east) ++(0,.05) -- (etf1)
+				coordinate[midway] (mid);
+
+			\draw (sf.east) ++(0,.05) to (esf1);
+			\draw (pf.east) ++(0,-.05) to (etf2);
+
+			\draw (esf2) -| (mid) -- (etf1);
+
+			\draw (etf.east) -| (10,-.5) |- (tf.west);
+		\end{scope}
+	\end{tikzpicture}
+
+	\caption{Outline of~delta application procedure}
+	\label{fig:delta appl}
+\end{figure}
+
+The~delta application is the~complementary process. The~input consists
+of~a~source file that has the~same contents as the~source file used
+during the~delta generation, and~the~patch that is the~result of~delta
+generation. The~source file is owned by~the~client as~a~result of~previous
+download or~update, while the~delta file is~downloaded for the~update.
+
+Since the~delta was created on top of an~expanded source file, the~delta
+client needs to reconstruct this file first. Afterwards, the~delta
+is~used to reconstruct the~expanded target file. This file is squashed
+into the~final target file.
+
+
+\section{Practical aspects of SquashFS delta generation}
+
+The~generic steps in the~delta generation and~application procedures are
+practically defined within the~boundaries of~delta tool (algorithm)
+used. However, the~SquashFS `expansion' and~`squashing' steps are custom
+to~the~task, and~the~necessary facilities are not~provided by any~tool yet.
+
+Since SquashFS supports having random non-compressed blocks,
+the~canonical solution would be to use that feature to create
+a~fully-compliant, non-compressed filesystem for deltas. However, this
+solution has a~few drawbacks.
+
+First of~all, there is no~point in~decompressing the~filesystem blocks
+that are equal in~both input files. Since both the~compressed
+and~decompressed data is simply the~same, the~delta algorithm handles
+both cases equally well. In~fact, the~increase of~data size may reduce
+the~effectiveness of~delta.
+
+It is actually more reasonable to compare the~two filesystems
+and~decompress the~blocks that have changed. As a~result, the~contents
+of~expanded source file change depending on the~choice of~blocks
+for~decompression. Since the~client needs to reconstruct the~expanded
+file exactly the~same, the~list of~decompressed blocks needs to
+be~provided to it --- preferably inside the~patch file.
+
+The~recompression step is easier. The~standard SquashFS tools use
+uncompressed blocks only when the~compression results in~larger block.
+Therefore, if the~client tries to recompress all the~uncompressed blocks
+in~the~filesystem and~discards those that result in~larger data, it is
+going to~obtain the~correct target file.  However, this implies
+repeatedly trying to~compress blocks that were uncompressed originally.
+Providing the~list of~blocks decompressed in~target file solves
+this inefficiency.
+
+Even then, there is one potential issue left. SquashFS is quite complex
+and~not well documented. The~filesystem blocks and~structures
+are~referenced using byte offsets, and~since the~process results
+in~data being shifted, all those offsets need to be~updated. This makes
+the~tool performing the~task quite complex itself, and~requires changes
+whenever the~SquashFS format changes.
+
+Considering that the~intermediate files are used as~delta input/output
+only, retaining the~compliance with SquashFS file format is
+not~beneficial. Actually, it makes both server and~client tools more
+complex, binds both to a~specific SquashFS version, and makes the~target
+file reconstruction less efficient.
+
+An~alternative to the~canonical solution is to use a~more generic
+intermediate file format. Without any strict requirements, it can be
+designed to achieve the~best efficiency. With a~little effort, it can
+also become self-contained --- that is, useful without any specific
+SquashFS awareness in~the~delta merge tool. As a~result, the~delta files
+are more universal and~the~client is~simpler.
+
+In~order to achieve this goal, the~patch needs to~contain enough
+information for the~client to~obtain the~locations and~lengths
+of~the~originally compressed blocks and~their decompressed counterparts.
+The~author decided to develop the~SquashDelta format specifically for~this
+goal.
+
+
+\section{The SquashDelta format}
+
+The~SquashDelta format defines two file types: the~expanded
+(intermediate) file and~the~delta file.
+
+\begin{figure}[h]
+	\centering
+
+	\begin{tikzpicture}[y=1.2cm]
+		\begin{scope}
+			\begin{scope}[
+					very thick,
+					top color=white]
+
+				\begin{scope}[
+						draw=green!50!black!50,
+						bottom color=green!50!black!20]
+
+					\draw[shade] (0,0) rectangle (1.5,-1);
+					\draw[shade] (2.5,0) rectangle (2.7,-1);
+					\draw[shade] (3.1,0) rectangle (3.5,-1);
+					\draw[shade] (3.8,0) rectangle (4.1,-1);
+					\draw[shade] (4.3,0) rectangle (5,-1);
+
+				\end{scope}
+
+				\begin{scope}[
+						draw=gray!50!black!50,
+						bottom color=gray!50!black!20]
+
+					\draw[shade] (1.5,0) rectangle (2.5,-1);
+					\draw[shade] (2.7,0) rectangle (3.1,-1);
+					\draw[shade] (3.5,0) rectangle (3.8,-1);
+					\draw[shade] (4.1,0) rectangle (4.3,-1);
+
+				\end{scope}
+
+				\begin{scope}[
+						draw=blue!50!black!50,
+						bottom color=blue!50!black!20]
+
+					\draw[shade] (5,0) rectangle (7.8,-1);
+					\draw[shade] (7.8,0) rectangle (9.3,-1);
+					\draw[shade] (9.3,0) rectangle (10.6,-1);
+					\draw[shade] (10.6,0) rectangle (12,-1);
+
+				\end{scope}
+
+				\begin{scope}[
+						draw=red!50!black!50,
+						bottom color=red!50!black!20]
+
+					\draw[shade] (12,0) rectangle (14,-1);
+					\draw[shade] (14,0) rectangle (16,-1);
+
+				\end{scope}
+
+			\end{scope}
+
+			\begin{scope}
+				\node at (2.5,-0.5) {input file contents};
+				\node at (8.5,-0.5) {expanded blocks};
+				\node at (13,-0.5) {block list};
+				\node at (15,-0.5) {header};
+			\end{scope}
+
+			\path (2,-1) coordinate (1) -- ++(0,-.4) coordinate (1a);
+			\path (6.4,-1) coordinate (1e) -- ++(0,-.4) coordinate (1b);
+			\path (2.9,-1) coordinate (2) -- ++(0,-.6) coordinate (2a);
+			\path (8.55,-1) coordinate (2e) -- ++(0,-.6) coordinate (2b);
+			\path (3.65,-1) coordinate (3) -- ++(0,-.8) coordinate (3a);
+			\path (9.95,-1) coordinate (3e) -- ++(0,-.8) coordinate (3b);
+			\path (4.2,-1) coordinate (4) -- ++(0,-1) coordinate (4a);
+			\path (11.3,-1) coordinate (4e) -- ++(0,-1) coordinate (4b);
+
+			\begin{scope}[thick, -stealth,
+					shorten >=1mm, shorten <=1mm]
+				\draw (1) -- (1a) -- (1b) -- (1e);
+				\draw (2) -- (2a) -- (2b) -- (2e);
+				\draw (3) -- (3a) -- (3b) -- (3e);
+				\draw (4) -- (4a) -- (4b) -- (4e);
+			\end{scope}
+		\end{scope}
+	\end{tikzpicture}
+
+	\caption{Structure of an~expanded file}
+	\label{fig:exp segments}
+\end{figure}
+
+The~expanded file is mostly an~extension of~a~regular SquashFS file (or
+any other data file containing compressed blocks).  The~additional data
+is appended to the~end of~the~file so that SquashFS structure offsets
+are retained, and~that it is possible to expand and~squash files
+in-place without shifting data.
+
+Therefore, the~initial segment of~an~expanded SquashFS file contains
+a~verbatim copy of~the~input file data, except for the~blocks that are
+being decompressed. During expansion, those blocks are replaced
+by~`holes' --- areas filled with null bytes that can be~stored
+and~compressed efficiently.
+
+The~corresponding decompressed data is appended to the~end of~the~file,
+creating expanded block segment. The~blocks are placed there
+sequentially, without any~additional metadata or~padding. Although there
+are no~strict requirements on the~order of~the~blocks, it is recommended
+to sort them by~offset, to make use of~sequential I/O and~increase
+likeliness of~delta matches.
+
+The~expanded block segment is followed by~SquashDelta-specific metadata
+--- the~block list that contains offsets and~lengths of~decompressed
+blocks, and~the~header that is used to identify the~file and~locate
+the~beginning of~the~block list.
+
+The~process of~squashing an~expanded file starts with reading the~header
+since its offset relative to the~end of~file is fixed. Afterwards,
+the~block list is read and~it is used to reconstruct the~original file.
+The~expanded data is compressed and~written back to the~holes in~data
+segment. Afterwards, the~file is truncated in~order to discard
+the~additional data, and~it becomes byte-equal with the~target file.
+
+\begin{figure}[h]
+	\centering
+
+	\begin{tikzpicture}[y=1.2cm]
+		\begin{scope}
+			\begin{scope}[
+					very thick,
+					top color=white]
+
+				\begin{scope}[
+						draw=red!50!black!50,
+						bottom color=red!50!black!20]
+
+					\draw[shade] (0,0) rectangle (2,-1);
+					\draw[shade] (2,0) rectangle (4,-1);
+
+				\end{scope}
+
+				\begin{scope}[
+						draw=green!50!black!50,
+						bottom color=green!50!black!20]
+
+					\draw[shade] (4,0) rectangle (10,-1);
+
+				\end{scope}
+
+			\end{scope}
+
+			\begin{scope}
+				\node at (7,-0.5) {delta data};
+				\node at (3,-0.5) {block list};
+				\node at (1,-0.5) {header};
+			\end{scope}
+		\end{scope}
+	\end{tikzpicture}
+
+	\caption{Structure of the~patch file}
+	\label{fig:patch segments}
+\end{figure}
+
+The~patch file is much simpler by~design. It starts with the~header
+and~the~block list for the~source file. These are used by~the~client
+to~reconstruct the~expanded source file.
+
+The~two metadata blocks are followed by~the~delta of~expanded files,
+stored in~the~format of~the~delta tool used. In~the~testing environment,
+it was the~vcdiff format used by~xdelta3 but~support for other formats
+can be added in~the~future. The~data is~placed last, so that the~open
+file descriptor can be~safely passed to the~delta merge tool after
+reading the~headers.
+
+
+\section{Efficiency of~the~new solution}
+
+In~order to~estimate the~benefits of~the~new format, the~author
+repeated the~tests from his previous article on~the~new format.
+The~previous plots were supplemented with the~new results.
+
+\begin{figure}[h]
+	\centering
+
+	\begin{tikzpicture}
+		\begin{axis}[
+				date coordinates in=x,
+				x tick label style={
+					rotate=45,
+					anchor=east,
+					xshift=-.08cm,
+					yshift=-.06cm
+				},
+				ymin=0,
+				ymax=13,
+				xmin=2014-01-03 6:00,
+				xmax=2014-01-17 18:00,
+				ylabel={Daily delta size},
+				y unit={MiB},
+				xlabel={Target date},
+				grid=both,
+				minor x tick num=1,
+				minor y tick num=4,
+				legend pos=north east,
+				ybar,
+				bar width=.15cm
+			]
+
+			\addplot table[x=date2,
+				y expr={\thisrow{size} / 1048576}] {data/daily-sizes};
+			\addplot table[x=end,
+				y expr={\thisrow{size} / 1048576}] {data/squashdelta-daily};
+			\addplot table[x=date2,
+				y expr={\thisrow{size} / 1048576}] {data/uncomp-deltas};
+
+			\legend{plain SquashFS deltas,
+				SquashDeltas,
+				uncompressed SquashFS deltas};
+		\end{axis}
+	\end{tikzpicture}
+
+	\caption{Daily delta sizes for different kinds of~SquashFS deltas}
+	\label{daily-delta-sizes}
+\end{figure}
+
+In figure \ref{daily-delta-sizes}, the~daily snapshot sizes in~three
+SquashFS variants are compared --- compressed, partially decompressed
+and~completely decompressed. SquashDelta files are only a~bit larger
+than deltas made using uncompressed files, and~therefore two to~four
+times smaller than the~regular deltas.
+
+\begin{figure}[h]
+	\centering
+
+	\begin{tikzpicture}
+		\begin{axis}[
+				date coordinates in=x,
+				x tick label style={
+					rotate=45,
+					anchor=east,
+					xshift=-.08cm,
+					yshift=-.06cm
+				},
+				ymin=0,
+				ymax=61,
+				xmax=2014-01-20,
+				ylabel={Delta size},
+				y unit={MiB},
+				xlabel={Previous snapshot date},
+				grid=both,
+				minor x tick num=1,
+				minor y tick num=4,
+				legend pos=north east
+			]
+
+			\addplot+[only marks] table[x=date,
+				y expr={\thisrow{size} / 1048576}] {data/vcdiff-sizes};
+			\addplot+[only marks] table[x=start,
+				y expr={\thisrow{size} / 1048576}] {data/squashdelta};
+			\addplot+[only marks] table[x=date1,
+				y expr={\thisrow{sum-difflen} / 1048576}] {data/daily-sizes};
+			\addplot+[only marks] table[x=date,
+				y expr={\thisrow{size} / 1048576}] {data/rsync-sizes};
+
+			\legend{combined sqfs delta, combined SquashDelta,
+				daily tar deltas, rsync update};
+		\end{axis}
+	\end{tikzpicture}
+
+	\caption{Plot of~delta download size for~update to~2014-01-17 snapshot}
+	\label{dl-size}
+\end{figure}
+
+The~sizes of complete updates are compared in~figure~\ref{dl-size}.
+SquashDeltas grow less rapidly over~time than plain deltas, resulting
+in~much better efficiency of~updating both few days old and~few months
+old systems.
+
+The~rapid increase of~regular delta size is~mostly related
+to~the~spread of~changes in~the~filesystem that causes growing number
+of~blocks to be~rewritten. The~SquashDelta format efficiently
+compensates for~that.
+
+Interestingly, after a~period of~one month the~SquashDelta update
+becomes smaller than the~one performed using emerge-delta-webrsync.
+This is only because `merged' deltas are~used for~SquashFS while
+diffballs are done daily and~therefore their size accumulates over time.
+
+\begin{figure}[h]
+	\centering
+
+	\begin{tikzpicture}[x=.36cm, y=.6cm]
+			\newcommand\mysbar[5]{
+				\path[draw=#2, fill=#2!10]
+					(#3,-#1*2.4) rectangle ++(#4,-1);
+				\node[right] (bar#1) at (#3,-#1*2.4 - 0.5)
+					{#5};
+%				\node[left] (size#1) at (#4,-#1*1.2 - 0.5)
+%					{\SI{#4}{\second}};
+			}
+			\newcommand\mydesc[2]{
+				\node[right] at (0,-#1*2.4+0.5) {#2};
+			}
+
+			\path (0,0) -- (40,0);
+
+			\mydesc{0}{regular SquashFS delta --- \ang{;;24}}
+			\mysbar{0}{yellow}{0}{20}{fetch}
+			\mysbar{0}{orange}{20}{4}{apply}
+
+			\mydesc{1}{SquashDelta on~Athlon 2x\SI{2}{\giga\hertz} --- \ang{;;19}}
+			\mysbar{1}{cyan}{0}{5}{fetch}
+			\mysbar{1}{green}{5}{14}{apply}
+
+			\mydesc{2}{SquashDelta on~i3 4x\SI{1,8}{\giga\hertz}--- \ang{;;12}}
+			\mysbar{2}{cyan}{0}{5}{fetch}
+			\mysbar{2}{blue}{5}{7}{apply}
+
+	\end{tikzpicture}
+
+	\caption{Comparison of~gentoo-x86 weekly update time (2014-01-10 to
+		2014-01-17) using different types of~SquashFS images
+		and~different CPUs}
+	\label{sync-time}
+\end{figure}
+
+While SquashDelta is~more efficient in~terms of~network I/O,
+the~additional task of~recompressing some of~the~filesystem blocks
+increases the~update time significantly. In~figure \ref{sync-time},
+the~author compares complete update time for~various types of~snapshots
+and~CPUs.
+
+On~both of~the~tested systems, the~SquashDelta update through
+a~\SI{10}{\mebi\bit} network link was faster than plain update.
+The~number of~CPUs (cores) is also a~significant factor
+since squashmerge is multi-threaded.
+
+The~exact results depend on~compression algorithm and~compression level
+in~use. In~this example, LZO with~compression level 4 was used.
+
+
+\section{Summary}
+
+The~use of~binary deltas to~directly update SquashFS images proved being
+a~viable alternative to~indirect repository update methods. It offered
+reduced complexity, memory and I/O use, and~often faster updates.
+However, it involved unnecessarily large delta size that limited
+the~speed of~updates and~increased mirror space consumption.
+
+Those deficiencies were mostly related to the~inefficiency of~generating
+deltas against compressed data. The~author created the~SquashDelta
+format to overcome those issues through making it possible to
+transparently decompress input blocks during delta construction.
+
+The~squashdelta tool decompresses unique blocks in~both files, providing
+a~more suitable input for the~delta generator. The~resulting patches are
+two to~four times smaller, and~the~decrease in~update time can
+be~noticed even on~a~moderately efficient CPU with~a~\SI{10}{\mebi\bit}
+network connection. The~benefits are even larger when a~network link
+with narrower throughput or~more efficient CPU is used.
+
+The~SquashDelta format itself is quite universal and~self-contained.
+Most importantly, this means that the~delta generation tool can
+be~updated to support newer versions of~SquashFS while retaining
+compatibility with the~same version of~the~delta merge tool. In~fact, it
+is even possible to add support for~another input file format while
+using the~same file reconstruction tool.
+
+The~update efficiency can possibly be~further improved by~improving
+the~block selection algorithm. Currently, all unique blocks in~input
+files are decompressed. This includes new and~removed blocks that
+do~not~have a~common part, and~decompressing those does not improve
+the~delta efficiency. Excluding those blocks from the~recompression
+process could decrease update time.
+
+Further delta size reduction could potentially be~obtained by~replacing
+the~binary delta of~SquashFS metadata structures with a~dedicated update
+algorithm. However, this would require more awareness of~the~SquashFS format
+and~increase the~complexity of~both tools. The~final gain may not outweigh
+the~effort needed to~implement it.
+
 
 \end{document}

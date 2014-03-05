@@ -6,4 +6,4 @@ all: partial-squashfs-decompression.pdf
 .SUFFIXES: .ltx .pdf
 
 .ltx.pdf:
-	xelatex $<
+	xelatex $< || rm $@
