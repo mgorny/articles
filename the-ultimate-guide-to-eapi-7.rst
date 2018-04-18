@@ -1083,8 +1083,98 @@ Eventually, all uses were removed and the file is now banned.
 The replacement for it is to use modern virtual packages.
 
 
+Rejected and postponed features
+===============================
+
+Minimal bash version at 4.3
+---------------------------
+One of the suggestions for EAPI 7 was to require bash-4.3.  However,
+this was rejected as it was determined that it does not add any ‘killer
+features’ that could benefit ebuilds.
+
+
+Sandbox path removal functions
+------------------------------
+The initial version of EAPI 7 draft included four functions to remove
+paths added by ``add*`` Sandbox functions.  This feature has been
+initially accepted and implemented in Portage.  However, it was
+eventually removed and postponed into a future EAPI in order to improve
+the interface — in particular, replace the 4 (or 8, with the changes)
+commands to manipulate paths with a single ``esandbox`` helper.
+
+
+Runtime-switchable USE flags
+----------------------------
+This request dates back to 2012.  It was codified into GLEP 62
+[#GLEP62]_, and included in the EAPI 6 feature list.  It aimed
+to provide a better solution for expressing optional pure runtime
+dependencies.  That is, dependencies that do not need to be present
+at build time but allow the package to expose additional features when
+installed afterwards.
+
+Using regular USE flags for those dependencies would force users to
+needlessly rebuild the whole package in order to enable or disable such
+a dependency.  For this reason, the common practice is to print those
+dependencies as postinst message and expect users to install them
+manually.  The idea was to add a special class of USE flags whose state
+could be switched in-place without having to rebuild the package
+in question.
+
+Sadly, this feature was deferred once again due to lack
+of implementation for Portage.
+
+
+||= — binding any-of dependency groups
+--------------------------------------
+The initial proposals date back to 2013.  This also is a feature that
+was postponed from EAPI 6.  The problem being solved is that the ``||``
+any-of dependency groups work correctly only for pure build-time or pure
+runtime dependencies.  If the package binds to one of the ‘providers’
+in ``||`` (e.g. links to the library) and the user uninstalls it
+in favor of another one, the package becomes broken.
+
+This problem has resulted e.g. in introducing binary USE flags to switch
+between providers that block each other, e.g. in case of OpenSSL vs
+LibreSSL, FFmpeg vs libav.  The ``||=`` operator meant to solve
+the problem by ‘binding’ the package to the current provider.  The idea
+was inspired by the ``:=`` slot operator; switching between different
+allowed providers would require rebuilds of the package.
+
+This feature was also deferred due to lack of implementation
+for Portage.
+
+
+Automatic REQUIRED_USE enforcing
+--------------------------------
+This idea is pretty recent, and it has been described in GLEP 73
+[#GLEP73]_.  It meant to solve some of the problems reported
+for ``REQUIRED_USE`` constraints.  Most notably, that their widespread
+use frequently requires manual resolution and clutters configuration
+files with changes that may only be required temporarily.  This results
+in some of the developers avoiding ``REQUIRED_USE``, and some having
+to use ugly hacks (such as split of practically equivalent flags
+into ``PYTHON_TARGETS`` and ``PYTHON_SINGLE_TARGET``).
+
+The solution proposed was to clearly define the algorithmic meaning
+of REQUIRED_USE and allow the package manager to automatically adjust
+USE flags in order to resolve the conflicts.  For example,
+if the package in question did not support using multiple Python
+interpreters, the package manager would automatically choose one
+of the enabled implementations.
+
+This feature was rejected by the Council.  It also had no implementation
+in Portage.
+
+
 References
 ==========
 
 .. [#EAPI6_GUIDE] The Ultimate Guide to EAPI 6 by Michał Górny
    (https://blogs.gentoo.org/mgorny/2015/11/13/the-ultimate-guide-to-eapi-6/)
+
+.. [#GLEP62] GLEP 62: Optional runtime dependencies via runtime-
+   switchable USE flags
+   (https://www.gentoo.org/glep/glep-0062.html)
+
+.. [#GLEP73] GLEP 73: Automated enforcing of REQUIRED_USE constraints
+   (https://www.gentoo.org/glep/glep-0073.html)
