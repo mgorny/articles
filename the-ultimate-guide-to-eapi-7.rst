@@ -2,7 +2,7 @@
 The ultimate guide to EAPI 7
 ============================
 :Author: Michał Górny
-:Date: 2018-02-17
+:Date: 2018-04-18
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
 
@@ -715,44 +715,6 @@ have to ``inherit eutils`` for that.
     dodeprecated() {
         eqawarn "Oh no, dodeprecated function is deprecated!"
         # ...
-    }
-
-
-Sandbox path removal commands
------------------------------
-Usage:
-
-- ``rmread <directory>``
-- ``rmwrite <directory>``
-- ``rmpredict <directory>``
-- ``rmdeny <directory>``
-
-The current EAPIs provided a set of four functions to add directories
-to various sandbox lists.  However, they did not provide a clear way
-of reverting those additions afterwards.  EAPI 7 adds a set of another
-four functions that can be used to remove previously added paths
-when they are no longer necessary.
-
-There was a number of proposals on how this should work, in particular
-proposing a push-pop style of path processing.  However, we have
-eventually established that explicit removal is the simplest solution
-that could be reliably implemented in different sandbox implementations.
-
-There was also a proposal to provide explicit commands to disable
-and enable sandbox.  However, it was rejected because there is no good
-reason to disable sandboxing in general.  All of the cases of disabling
-sandbox so far were related either to bugs or design issues of Gentoo
-sandbox, and they should be worked around with Gentoo sandbox-specific
-variables instead of a generic ‘kill switch’.
-
-.. code-block:: bash
-
-    myfancyvcs_src_unpack() {
-        local store=${EVCS_STORE_DIR:-${DISTDIR}}/myfancyvcs-source
-
-        addwrite "${store}"
-        myfancyvcs_real_unpack
-        rmwrite "${store}"
     }
 
 
