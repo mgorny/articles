@@ -2,14 +2,14 @@
 The ultimate guide to EAPI 7
 ============================
 :Author: Michał Górny
-:Date: 2018-04-18
+:Date: 2018-05-02
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
 
 .. WARNING::
-   This document is a work-in-progress based on the current state
-   of EAPI that is pre-approved with possible future changes.  Note
-   that it is incomplete and that its contents may change.
+   This document is a work-in-progress.  It might be incomplete,
+   and contain major mistakes.  Its contents are subject to change
+   before the final version.
 
 .. contents::
 
@@ -23,18 +23,19 @@ for EAPI 7.
 
 Of all EAPIs approved so far, EAPI 7 brings the largest number
 of changes.  It follows the path already established with EAPI 6,
-that is integrating commonly used or needed features, and removing
-whatever is deemed unnecessary or complex.  However, the circumstances
-of its creation are different.
+that is integrating features that are either commonly used or deemed
+necessary, and removing those deemed unnecessary or too complex
+to support.  However, the circumstances of its creation are different.
 
 EAPI 6 was more like a minor release.  It has been formed around
-the time when Portage development has practically stalled, and aimed
-to collect some long-waiting changes that would be easy to implement.
+the time when Portage development has been practically stalled,
+and aimed to collect some long-waiting changes that would be easy
+to implement by people who have not regularly worked with Portage.
 
 EAPI 7 is closer to a proper major release.  It included far more
 planning ahead, and has been mostly specified even before implementation
-work has started.  We did not skip features that were hard to implement,
-even if they will be eventually postponed.
+work has started.  We did not initially skip features that were hard
+to implement, even though some of them were eventually postponed.
 
 I will attempt to explain all the changes in EAPI 7 in this guide,
 including rationale and examples.
@@ -48,8 +49,8 @@ dohtml is banned
 ----------------
 The ``dohtml`` function has been deprecated in EAPI 6 already, so it
 should come as no surprise that EAPI 7 finally bans it.  The rationale
-remains the same: it was overcomplex, confusing and frequently required
-changes.
+remains the same: it was overcomplex, confusing and frequently asked for
+specification updates.
 
 The replacement is ``dodoc -r``, combined with ``docinto`` whenever
 necessary.  However, I should point out that there is no technical
@@ -107,7 +108,7 @@ remaining functions are replacements:
     src_install() {
         # BAD: dolib is banned
         dolib libfoo.a foo.o
-        # TWICE BAD: dolib were not meant to install shared libraries
+        # TWICE BAD: dolib was not meant to install shared libraries
         dolib libfoo.so libfoo.so.1
 
         # GOOD: dolib.a installs files -x
@@ -120,7 +121,7 @@ remaining functions are replacements:
 PORTDIR and ECLASSDIR are removed
 ---------------------------------
 EAPI 6 has defined three directories that specifically referenced
-the ebuild repository:
+locations inside the ebuild repository:
 
 1. ``PORTDIR`` that referenced the top directory of the repository,
 
@@ -145,8 +146,8 @@ Those variables dated back to the concept of a single repository
 with overlays.  The definition in the PMS attempted to fit that concept
 into the multi-repo world by forcing them to refer to the 'master
 repository'.  While it worked for all our cases, it was an odd fit —
-with e.g. ``ECLASSDIR`` in a slaved repository eclass referencing
-the parent repository where the eclass in question is not present.
+with e.g. ``foo.eclass`` from a subrepository would not be able to
+access its own ``ECLASSDIR``.
 
 They also undesirably made ebuilds rely on very specific format
 and contents of the repository.  With ``PORTDIR`` in use, we could not
@@ -221,17 +222,16 @@ Related eclass changes
 As usual, I encourage developers to remove and ban obsolete APIs
 of their eclasses at EAPI upgrade point.
 
-In EAPI 7, a few obsolete eclasses will be banned:
+In EAPI 7, a few obsolete eclasses are banned:
 
 - ``eapi7-ver.eclass`` — all functions included in EAPI 7
 - ``epatch.eclass`` — replaced by EAPI 6 ``eapply`` function
 - ``ltprune.eclass`` — obsoleted in favor of inline pruning
 - ``versionator.eclass`` — replaced by EAPI 7 version functions
 
-Additionally, ``eutils.eclass`` will stop implicitly providing
-the functions that were split out of it.  If you need one
-of the following functions, you will need to explicitly inherit
-the eclass providing them:
+Additionally, ``eutils.eclass`` stops implicitly providing the functions
+that were split out of it.  If you need one of the following functions,
+you need to explicitly inherit the eclass providing them:
 
 - ``desktop.eclass`` — ``make_desktop_entry``, ``make_session_desktop``,
     ``domenu``, ``doicon`` and their ``new*`` variants
@@ -239,10 +239,12 @@ the eclass providing them:
 - ``estack.eclass`` — ``estack*``, ``evar*``, ``eshopts*``, ``eumask*``
 - ``ltprune.eclass`` — ``prune_libtool_files`` (banned)
 - ``preserve-libs.eclass`` — ``preserve_old_lib``
+- ``vcs-clean.eclass`` — ``e*_clean``
 
-Additionally, the implicit inherit of ``toolchain-funcs.eclass`` will
-be removed.  Once you inherit the correct split eclasses, please recheck
-whether you still need ``eutils``.
+Additionally, the implicit inherits of ``multilib.eclass``
+and ``toolchain-funcs.eclass`` are removed.  Once you inherit
+the correct split eclasses, please recheck whether you still need
+``eutils``.
 
 
 Improved cross-compilation support
