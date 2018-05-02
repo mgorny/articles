@@ -18,28 +18,30 @@ Preamble
 ========
 Back when EAPI 6 was approved and ready for deployment, I have written
 a blog post entitled the Ultimate Guide to EAPI 6 [#EAPI6_GUIDE]_.
-Now that EAPI 7 is well underway, it is time to write a similar guide
-for EAPI 7.
+Now that EAPI 7 is ready, it is time to publish a similar guide to it.
 
 Of all EAPIs approved so far, EAPI 7 brings the largest number
-of changes.  It follows the path already established with EAPI 6,
-that is integrating features that are either commonly used or deemed
-necessary, and removing those deemed unnecessary or too complex
-to support.  However, the circumstances of its creation are different.
+of changes.  It follows the path established by EAPI 6.  It focuses
+on integrating features that are either commonly used or that can not
+be properly implemented in eclasses, and removing those that are either
+deemed unnecessary or too complex to support.  However,
+the circumstances of its creation are entirely different.
 
-EAPI 6 was more like a minor release.  It has been formed around
-the time when Portage development has been practically stalled,
-and aimed to collect some long-waiting changes that would be easy
-to implement by people who have not regularly worked with Portage.
+EAPI 6 was more like a minor release.  It was formed around
+the time when Portage development has been practically stalled.
+It aimed to collect some old requests into an EAPI that would be easy to
+implement by people with little knowledge of Portage codebase.
+Therefore, the majority of features oscillated around bash parts of the
+package manager.
 
-EAPI 7 is closer to a proper major release.  It included far more
-planning ahead, and has been mostly specified even before implementation
-work has started.  We did not initially skip features that were hard
-to implement, even though some of them were eventually postponed.
+EAPI 7 is closer to a proper major release.  It included some explicit
+planning ahead of specification, and the specification has been mostly
+completed even before the implementation work started.  We did not
+initially skip features that were hard to implement, even though
+the hardest of them were eventually postponed.
 
 I will attempt to explain all the changes in EAPI 7 in this guide,
-including rationale and examples.
-
+including the rationale and ebuild code examples.
 
 
 Banned commands and removed variables
@@ -76,26 +78,27 @@ dolib and libopts are banned
 EAPI 6 defined three ``dolib*`` functions: ``dolib.a``, ``dolib.so``
 and plain ``dolib``.  By looking at the three names, you may come
 to the wrong conclusion that ``dolib`` somehow wraps them both — but it
-does not.  Turns out, it is just an alias for ``dolib.a``,
-with additional support for ``libopts``.
+does not.  Turns out, it is just an alias for ``dolib.a``, combined
+with support for ``libopts``.
 
 Looking at the current state of Gentoo, developers prefer ``dolib.a``
-and ``dolib.so`` with appropriately 4 and 5 times more calls that
-``dolib``.  Apparently, many of the ``dolib`` calls are wrongly used
-to install shared libraries.  The remaining uses are either static
-libraries or other non-library files (for which ``dolib.a`` seemed
-inappropriate, I guess).  ``libopts`` is not used at all.
+and ``dolib.so`` with appropriately 4 and 5 times more calls of those
+commands than of ``dolib``.  Furthermore, apparently many
+of the ``dolib`` calls are wrongly used to install shared libraries.
+The remaining uses are either static libraries or other non-library
+files (for which ``dolib.a`` seemed inappropriate, I guess).
+``libopts`` is not used at all.
 
 In its basic form, ``dolib`` is redundant to ``dolib.a``, and confusing
 to developers who assume it can also install shared libraries.
 Technically, the ``libopts`` variant makes it possible to use ``dolib``
-beyond what ``dolib.a`` and ``dolib.so`` provide — however, there has
-been no use case for that so far and it is unlikely there ever will be.
-Even then, the EAPI 6 ``get_libdir`` combined with ``doins`` family can
-fully satisfy that corner case.
+beyond what the two other helpers provide — however, there has been
+no use case for that so far and it is unlikely there ever will be.
+Even then, it can be fully satisfied with ``get_libdir`` combined
+with ``doins``, so there is no reason to keep yet another helper.
 
-For those reasons, EAPI 7 bans ``dolib`` and ``libopts``. The two
-remaining functions are replacements:
+Therefore, EAPI 7 bans ``dolib`` and ``libopts``. The two remaining
+functions are replacements:
 
 - ``dolib.so`` to install shared libraries, their symlinks and any other
   file that needs to be installed into libdir as ``+x``, and
@@ -120,21 +123,20 @@ remaining functions are replacements:
 
 PORTDIR and ECLASSDIR are removed
 ---------------------------------
-EAPI 6 has defined three directories that specifically referenced
+EAPI 6 has defined three variables that specifically referenced
 locations inside the ebuild repository:
 
-1. ``PORTDIR`` that referenced the top directory of the repository,
+1. ``PORTDIR`` — top directory of the repository,
 
-2. ``ECLASSDIR`` that referenced its ``eclass`` subdirectory,
+2. ``ECLASSDIR`` — its ``eclass`` subdirectory,
 
-3. ``FILESDIR`` that referenced the ``files`` subdirectory
-   of the current package.
+3. ``FILESDIR`` — the ``files`` subdirectory of the current package.
 
 After a very long struggle, we were able to eliminate the uses
-of the first two, and appropriately they are removed in EAPI 7.
-The third one was left, although Portage was modified not to use
-the real directory but instead link the appropriate files into a safe
-temporary location.
+of the first two, and eventually remove them in EAPI 7.  The third one
+was left but it can be easily implemented using a temporary directory
+without having access to the actual repository.  Portage was modified
+to use such a shadow directory.
 
 The rationale is that the ``PORTDIR`` and ``ECLASSDIR`` variables were
 pretty much fundamentally wrong design, and bypassed the package manager
@@ -143,22 +145,24 @@ e.g. to access ``files`` subdirectory of another package or store data
 in ``ECLASSDIR``.
 
 Those variables dated back to the concept of a single repository
-with overlays.  The definition in the PMS attempted to fit that concept
-into the multi-repo world by forcing them to refer to the 'master
-repository'.  While it worked for all our cases, it was an odd fit —
-with e.g. ``foo.eclass`` from a subrepository would not be able to
-access its own ``ECLASSDIR``.
+with overlays.  The PMS attempted to fit that old concept into
+the new multi-repo world.  This created a weird hybrid in which
+both variables referenced an opaque concept of ‘master repository’.
+While it worked most of the time, it was an odd fit — as it did not
+necessarily reference the repository containing the ebuild or eclass
+in question but — with some luck — the Gentoo repository, being
+the final master and the source of abuse.
 
-They also undesirably made ebuilds rely on very specific format
-and contents of the repository.  With ``PORTDIR`` in use, we could not
-even start considering more optimal ways of storing ebuilds.  Partial
-checkouts (which some users actually do) might have caused random
-ebuilds to fail (because they referenced other package's files).
-Finally, these accesses bypassed Manifest checks, creating a potential
-vulnerability.
+Furthermore, they also undesirably made ebuilds rely on very specific
+format and contents of the repository.  Partial checkouts, full Manifest
+coverage (with protection from using unverified files), more optimal
+ebuild storage — ``PORTDIR`` stood in the way of it all.
 
 As for replacements, there are none.  If whatever you needed doing
-requires direct repository access, you're doing it wrong.
+requires direct repository access, you were doing it wrong.  That said,
+providing a way to access licenses was considered at a point.  However,
+nobody has come up with a really good use case for it and it was
+abandoned as unnecessary.
 
 
 DESTTREE and INSDESTTREE are gone
@@ -166,19 +170,16 @@ DESTTREE and INSDESTTREE are gone
 Those two were pretty much implementation details that inadvertently
 made it to the variable list.  ``DESTTREE`` used to specify the ``into``
 install prefix, while ``INSDESTTREE`` the ``insinto`` directory.
-Historically, there were others like them that have been retroactively
-removed in the past as they were not being used.  Now we remove the two
-remaining variables.
+Historically, there were others like them but they have been
+retroactively removed in the past.  Now we remove the two remaining
+variables after replacing all their uses.
 
-The replacement for setting the values is to use ``into``
-and ``insinto`` functions directly.  If you wish to limit their scope
-(i.e. replace ``local INSDESTTREE``), you can run them inside
-a subshell.
+If you want to set the paths, call ``into`` and ``insinto`` directly.
+If you need to limit their scope, put them in a subshell.
 
-Getting the previously-set value is not supported.  If you want to avoid
-repeating the same path, you can define a helper variable.  However,
-I would strongly encourage you to write paths inline for improved
-readability.
+Getting the currently set path is unsupported.  If you're trying to
+avoid repeating the same path multiple times, use a helper variable.
+Or just repeat it for improved readability.
 
 .. code-block:: bash
 
@@ -220,7 +221,8 @@ readability.
 Related eclass changes
 ----------------------
 As usual, I encourage developers to remove and ban obsolete APIs
-of their eclasses at EAPI upgrade point.
+of their eclasses at EAPI upgrade point.  This is the best way
+of cleaning up stale stuff with minimal risk of breakage.
 
 In EAPI 7, a few obsolete eclasses are banned:
 
@@ -260,32 +262,31 @@ the efforts were pretty much haphazard.
 For EAPI 7, we finally managed to get the few relevant developers
 to focus and establish a real plan on supporting cross-compilation.
 Like Prefix, it is optional by design.  The behavior for package
-managers not interested in cross-compilation is clearly defined,
-and regular developers can continue writing ebuilds without much regard
-to the problem.  However, the developers wishing to support it can
-modify the ebuilds while preserving compatibility between different
+managers not interested in the topic is clearly defined, and regular
+developers can continue writing ebuilds without much regard
+to the problem.  The developers wishing to support cross can now
+modify the ebuilds without risking incompatibility between different
 package managers.
 
 The first step in designing this part of the specification was to
 finally settle on consistent and unambiguous terminology.  To achieve
-that, we settled on using the autotools triplet names.  This includes
+that, we decided to use the autotools triplet names.  This includes
 the following three triplets:
 
-1. ``CBUILD`` — that references the system used to build packages,
-   i.e. the one running the cross-compiler.  This triplet is used
-   to build executables that are run during the build.  When not
-   cross-compiling, ``CBUILD`` is equal to ``CHOST``.
+1. ``CBUILD`` — the system used to build packages, i.e. the one running
+   the cross-compiler.  This triplet is used to build executables that
+   are run during the build.  When not cross-compiling, ``CBUILD`` is
+   equal to ``CHOST``.
 
-2. ``CHOST`` — that references the system that will be running
-   the package.  There is no guarantee that executables built for this
-   triplet will run on the build machine.
+2. ``CHOST`` — the system that will be running the installed package.
+   There is no guarantee that executables built for this triplet
+   will run on the build machine.
 
-3. ``CTARGET`` — which is used when building some cross-toolchain tools,
-   and specifies the system for which the cross-toolchain is going
-   to build.  We can ignore it for the purpose of PMS.
+3. ``CTARGET`` — only used when building some cross-toolchain tools,
+   specifies the system for which the cross-toolchain is going to build.
+   We can ignore it for the purpose of PMS.
 
-Now that we have a clear terms, I can proceed with explaining
-the changes.
+Now that we have clear terms, I can proceed with explaining the changes.
 
 
 Build-time dependencies split into DEPEND and BDEPEND
@@ -300,7 +301,7 @@ dependencies into two groups:
    tools (e.g. pkg-config).  Those are placed in ``BDEPEND`` now.
 
 2. Dependencies that need to be compiled for the real system,
-   and present for the toolchain to operate.  Those mostly include
+   and present for the toolchain to work.  Those mostly include
    libraries since the link editor needs to link to them.  Those
    remain as ``DEPEND``.
 
@@ -309,13 +310,13 @@ packages twice.  With the split, we can save time and reduce the size
 of cross-compiled system.
 
 While the necessity of splitting dependencies was clearly agreed on,
-there was much of a discussion on how to name the new variables.
-Amongst all possible variants, ``BDEPEND``/``DEPEND`` were chosen
-for two reasons. Firstly, to avoid ambiguity in name (B goes
-for CBUILD, while H could be confused between CHOST/host).  Secondly,
-because most of the existing packages in ``DEPEND`` fit into the second
-group, so leaving them in place follows the principle of smallest
-change necessary.
+there was lot of discussion on how to name the new variables.  Amongst
+all possible variants, ``BDEPEND``/``DEPEND`` were chosen for two
+reasons. Firstly, to avoid ambiguity in name (B goes for CBUILD,
+while H could be confused between CHOST/host).  Secondly, because most
+of the existing packages in ``DEPEND`` fit into the second group,
+so leaving them in place follows the principle of smallest change
+necessary.
 
 .. code-block:: bash
 
@@ -332,22 +333,21 @@ change necessary.
 
 SYSROOT and ESYSROOT variables (for DEPEND)
 -------------------------------------------
-The concept of sysroot was pretty well-known among cross-compilation
-users, and to some degree deployed as a custom variable in Gentoo.
-Starting with EAPI 7, sysroots are cleanly defined and supported
-officially.
+The concept of sysroot was pretty well-known among cross-compiler
+users, and to some degree deployed as a user-defined environment
+variable.  Starting with EAPI 7, sysroots are cleanly defined
+and supported officially.
 
 According to the EAPI 7 definition, ``SYSROOT`` is the location where
 ``DEPEND``-class packages are installed.  Like ``ROOT``, it comes with
-no embedded ``EPREFIX`` and an ``ESYSROOT`` variant with it.
-When ``SYSROOT`` is different from ``ROOT``, pure build time
-dependencies (``DEPEND``) are installed to ``SYSROOT`` instead
-of ``ROOT``, allowing users to save space on the filesystem holding
-the latter.
+no embedded ``EPREFIX`` and has an ``ESYSROOT`` variant with prefix
+appended.  When ``SYSROOT`` is different from ``ROOT``, pure build time
+dependencies (``DEPEND``) are installed to ``SYSROOT``, allowing users
+to save space on the filesystem running the actual target.
 
 It was unclear whether ``SYSROOT`` should embed the offset prefix
-or not, and whether we should allow having different prefixes
-for different variables.  Eventually, we concluded that using the same
+or not, and whether a different value of ``EPREFIX`` should be allowed
+for ``SYSROOT``.  Eventually, we concluded that using the same
 ``EPREFIX`` is necessary for interoperability.  For example,
 if a library specified as a build-time dependency hardcodes a path
 to a file that is used at runtime, the path must match in both roots,
@@ -376,10 +376,9 @@ BROOT variable (for BDEPEND)
 Since we have explicit path variables for ``DEPEND`` and ``RDEPEND``,
 it only seemed reasonable to include one for ``BDEPEND`` as well
 (``PDEPEND`` is irrelevant since it is not guaranteed to be installed
-at the time the ebuild could use it).  The ``BROOT`` (build-root)
-variable serves that exact purpose.  Unlike the other two variables,
-it is the full path including any prefix (which may be different than
-``EPREFIX``).
+before ebuild finishes).  The ``BROOT`` (build-root) variable serves
+that exact purpose.  Unlike the other two variables, it is the full path
+including any prefix (which may be different than ``EPREFIX``).
 
 The rationale for this is that there are valid cases for cross-
 compilation with different prefixes.  An example is building packages
@@ -410,12 +409,12 @@ for sysroot.
 
 The ``--build`` and ``--target`` are used to pass ``CBUILD``
 and ``CTARGET`` respectively to the configure scripts.  Their presence
-(or rather, values disjoint from ``--host``) enable the cross-
+(or rather, values disjoint from ``--host``) enable the cross-\
 compilation logic in configure.  Both of them were added retroactively
-to all EAPIs, as being passed the value of the respective variable
-whenever they are not empty.  This is because they were implemented
-this way in all three package managers for a long time — in Portage
-since at least 2005, in the other two since their inception.
+to all EAPIs, as being passed whenever the respective variable is not
+empty.  This is because they were implemented this way in all three
+package managers for a long time — in Portage since at least 2005, in
+the other two since their inception.
 
 The ``--with-sysroot`` option is specific to projects using libtool,
 and overrides the sysroot used by libtool (obtained from the compiler).
@@ -433,10 +432,9 @@ confusing and eventually decided to replace it with another layout.
 
 As of EAPI 7, both of those functions optionally take a single short
 option ``-b``, ``-d`` or ``-r`` that cause it to apply to the locations
-of ``BDEPEND``, ``DEPEND`` and ``RDEPEND`` appropriately, with
-the default of ``-r``.  Since those commands scan packages,
-the dependency type names seemed most appropriate and unambiguous.
-
+of ``BDEPEND``, ``DEPEND`` and ``RDEPEND`` appropriately.  The default
+is ``-r``.  Since those commands scan packages, the dependency type
+names seemed most appropriate and unambiguous.
 
 .. code-block:: bash
 
@@ -480,16 +478,18 @@ Introduction
 One of the goals for EAPI 7 was to integrate commonly used commands
 for version manipulation and comparison.  Those functions used
 to be provided by ``versionator.eclass``.  However, this eclass used
-to provide 15 different functions which would be a lot for a new EAPI.
-Moreover, many of the functions were redundant, some of them used
+to provide 15 different functions and that would be a lot for a new
+EAPI.  Moreover, many of the functions were redundant, some of them used
 very rarely and all of them were suboptimal.  Therefore, we decided
 to work on a new concept instead.
 
 We have established how various functions are used, and prepared a new
 EAPI consisting of three functions that can wholly replace almost all
-the real uses of ``versionator.eclass``.  Those are: ``ver_cut``
-to obtain substrings of a version string, ``ver_rs`` to replace
-separators in a version string and ``ver_test`` to compare two versions.
+the real uses of ``versionator.eclass``.  Those are: 
+
+- ``ver_cut`` to obtain substrings of a version string
+- ``ver_rs`` to replace separators in a version string
+- ``ver_test`` to compare two versions
 
 The first two functions work using a new, flexible version syntax
 that can be used to operate on Gentoo versions as well as on upstream
@@ -497,8 +497,7 @@ versions.  The third provides fully PMS-compliant version comparison
 routines with a friendly usage resembling the shell ``test`` builtin.
 
 To provide some real-life testing, ``eapi7-ver.eclass`` was written
-whose purpose is to provide the reference implementations of the new
-functions for existing EAPIs.
+providing the reference implementation for previous EAPIs.
 
 
 Version strings (for manipulation)
@@ -641,9 +640,9 @@ The following operators (inspired by shell) are supported:
 - ``-le`` — *v1* is less than or equal to *v2*
 - ``-lt`` — *v1* is less than *v2*
 
-We have decided not to use the textual operator forms instead of
-literal ``<`` and ``>`` as the latter would require being explicitly
-quoted/escaped.
+We have decided to use the ‘verbose’ operator names instead of literal
+``<`` and ``>`` as the latter would require being explicitly escaped
+in bash.
 
 Example:
 
@@ -794,10 +793,10 @@ D, ED, ROOT, EROOT no longer have a trailing slash
 The previous EAPIs specified that the four path variables: ``D``,
 ``ED``, ``ROOT`` and ``EROOT`` always end with a trailing slash.
 The rationale behind that was that the two latter variables frequently
-pointed at the filesystem root (``/``), and therefore path appended
-to it needed not to start with a slash in order to avoid doubling it.
-To allow handling this consistently for different values of ``ROOT``,
-the specification made them always end with a slash.
+pointed at the filesystem root (``/``), and therefore ebuilds had to
+take care not to append a second slash to it.  To allow handling this
+consistently for different values of ``ROOT``, the specification made
+all variables always end with a slash.
 
 While this reasoning makes sense, the behavior has been found unnatural
 by many developers.  In the end, it created more double slashes than
@@ -890,9 +889,9 @@ works.  The first of them is lifting the restriction that said that
 This restriction was added historically due to the implementation
 not being able to handle ``die`` from a subprocess correctly
 (i.e. implicitly terminate the parent process).  However, over time such
-an implementation has become necessary.  EAPI 4 has specified that most
-of the ebuild helpers die on their own, at the same time specifying
-that they must be implemented as external commands!  So the rationale
+an implementation became a necessity.  EAPI 4 already specified that
+most of the ebuild helpers die on their own, at the same time specifying
+that they must be implemented as external commands.  So the rationale
 is simple: if the package manager must provide a logic for its external
 commands to ``die`` reliably, there is no reason not to provide it
 for subshells in bash code.
