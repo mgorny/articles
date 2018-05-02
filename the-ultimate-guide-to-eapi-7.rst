@@ -236,7 +236,7 @@ that were split out of it.  If you need one of the following functions,
 you need to explicitly inherit the eclass providing them:
 
 - ``desktop.eclass`` — ``make_desktop_entry``, ``make_session_desktop``,
-    ``domenu``, ``doicon`` and their ``new*`` variants
+  ``domenu``, ``doicon`` and their ``new*`` variants
 - ``epatch.eclass`` — ``epatch`` (banned)
 - ``estack.eclass`` — ``estack*``, ``evar*``, ``eshopts*``, ``eumask*``
 - ``ltprune.eclass`` — ``prune_libtool_files`` (banned)
