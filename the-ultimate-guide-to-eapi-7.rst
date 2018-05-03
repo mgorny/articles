@@ -2,14 +2,10 @@
 The ultimate guide to EAPI 7
 ============================
 :Author: Michał Górny
-:Date: 2018-05-02
+:Date: 2018-05-03
+:Version: 1.0
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
-
-.. WARNING::
-   This document is a work-in-progress.  It might be incomplete,
-   and contain major mistakes.  Its contents are subject to change
-   before the final version.
 
 .. contents::
 
@@ -47,6 +43,8 @@ including the rationale and ebuild code examples.
 Banned commands and removed variables
 =====================================
 
+.. _dohtml:
+
 dohtml is banned
 ----------------
 The ``dohtml`` function has been deprecated in EAPI 6 already, so it
@@ -72,6 +70,9 @@ subdirectories named after what they contain.
         dodoc -r foo/.
     }
 
+
+.. _dolib:
+.. _libopts:
 
 dolib and libopts are banned
 ----------------------------
@@ -121,6 +122,9 @@ functions are replacements:
     }
 
 
+.. _ECLASSDIR:
+.. _PORTDIR:
+
 PORTDIR and ECLASSDIR are removed
 ---------------------------------
 EAPI 6 has defined three variables that specifically referenced
@@ -164,6 +168,9 @@ providing a way to access licenses was considered at a point.  However,
 nobody has come up with a really good use case for it and it was
 abandoned as unnecessary.
 
+
+.. _DESTTREE:
+.. _INSDESTTREE:
 
 DESTTREE and INSDESTTREE are gone
 ---------------------------------
@@ -218,6 +225,15 @@ Or just repeat it for improved readability.
     }
 
 
+.. _desktop.eclass:
+.. _eapi7-ver.eclass:
+.. _epatch.eclass:
+.. _estack.eclass:
+.. _eutils.eclass:
+.. _ltprune.eclass:
+.. _preserve-libs.eclass:
+.. _vcs-clean.eclass:
+
 Related eclass changes
 ----------------------
 As usual, I encourage developers to remove and ban obsolete APIs
@@ -229,7 +245,9 @@ In EAPI 7, a few obsolete eclasses are banned:
 - ``eapi7-ver.eclass`` — all functions included in EAPI 7
 - ``epatch.eclass`` — replaced by EAPI 6 ``eapply`` function
 - ``ltprune.eclass`` — obsoleted in favor of inline pruning
+  (``find "${D}" -name '*.la' -delete || die``)
 - ``versionator.eclass`` — replaced by EAPI 7 version functions
+  (see also: `replacing versionator.eclass uses`_)
 
 Additionally, ``eutils.eclass`` stops implicitly providing the functions
 that were split out of it.  If you need one of the following functions,
@@ -289,6 +307,9 @@ the following three triplets:
 Now that we have clear terms, I can proceed with explaining the changes.
 
 
+.. _BDEPEND:
+.. _DEPEND:
+
 Build-time dependencies split into DEPEND and BDEPEND
 -----------------------------------------------------
 For the purposes of cross-compilation, it is useful to split build-time
@@ -331,6 +352,9 @@ necessary.
         app-misc/frobnicate"
 
 
+.. _SYSROOT:
+.. _ESYSROOT:
+
 SYSROOT and ESYSROOT variables (for DEPEND)
 -------------------------------------------
 The concept of sysroot was pretty well-known among cross-compiler
@@ -371,6 +395,8 @@ reduces the risk of confusion.
     }
 
 
+.. _BROOT:
+
 BROOT variable (for BDEPEND)
 ----------------------------
 Since we have explicit path variables for ``DEPEND`` and ``RDEPEND``,
@@ -400,6 +426,8 @@ case, we are allowing a separate prefix and the choice of name between
     }
 
 
+.. _econf:
+
 New ./configure parameters in econf
 -----------------------------------
 To help with implementing the new logic, two sets of parameters
@@ -421,6 +449,9 @@ and overrides the sysroot used by libtool (obtained from the compiler).
 It is passed in EAPI 7 if ``./configure --help`` indicats that such
 an option is present (i.e. like all the other optional flags).
 
+
+.. _best_version:
+.. _has_version:
 
 New options to has_version and best_version
 -------------------------------------------
@@ -540,6 +571,8 @@ Examples:
   =============== = == = == = = = ===== = =
 
 
+.. _ver_cut:
+
 Obtaining version substring (ver_cut)
 -------------------------------------
 Usage: ``ver_cut <range> [<version>]``
@@ -579,6 +612,8 @@ Examples (``_`` is used for alignment, it is not part of the output):
     # e.g.   https://example.com/foo/download/1.2/foo-1.2.3.tar.gz
     SRC_URI="https://example.com/foo/download/$(ver_cut 1-2)/${P}.tar.gz"
 
+
+.. _ver_rs:
 
 Replacing version separators (ver_rs)
 -------------------------------------
@@ -622,6 +657,8 @@ they do not represent parts of version string):
     MY_P=${PN}-$(ver_rs 2 -)
 
     
+.. _ver_test:
+
 Version comparison (ver_test)
 -----------------------------
 Usage: ``ver_test [<v1>] <op> <v2>``
@@ -657,6 +694,8 @@ Example:
         done
     }
 
+
+.. _versionator.eclass:
 
 Replacing versionator.eclass uses
 ---------------------------------
@@ -696,6 +735,8 @@ functions.
 Other new features and commands
 ===============================
 
+.. _eqawarn:
+
 eqawarn to print warnings for developers
 ----------------------------------------
 Usage: ``eqawarn <message>``
@@ -718,6 +759,8 @@ have to ``inherit eutils`` for that.
         # ...
     }
 
+
+.. _ENV_UNSET:
 
 Environment variable filtering (ENV_UNSET)
 ------------------------------------------
@@ -748,6 +791,8 @@ for the time being.
         XDG_CONFIG_DIRS XDG_CACHE_HOME XDG_RUNTIME_DIR"
 
 
+.. _dostrip:
+
 Controllable stripping (dostrip)
 --------------------------------
 Usage: ``dostrip [-x] <path>...``
@@ -774,6 +819,10 @@ is used, ``dostrip`` can be used to select files to strip.
     }
 
 
+.. _eapply:
+.. _eapply_user:
+.. _patch:
+
 GNU patch 2.7 compatibility
 ---------------------------
 EAPI 7 requires the provided ``patch`` command to be compatible
@@ -787,6 +836,11 @@ file:
 
 Other behavior changes
 ======================
+
+.. _D:
+.. _ED:
+.. _ROOT:
+.. _EROOT:
 
 D, ED, ROOT, EROOT no longer have a trailing slash
 --------------------------------------------------
@@ -848,6 +902,11 @@ and it is consistent with how ``EPREFIX`` (or ``BROOT`` now) works.
     }
 
 
+.. _einfo:
+.. _elog:
+.. _ebegin:
+.. _eend:
+
 Output commands no longer pollute stdout
 ----------------------------------------
 The output channel for commands ``einfo``, ``elog``, etc. was undefined
@@ -879,6 +938,9 @@ warnings:
         doins test.foo
     }
 
+
+.. _die:
+.. _assert:
 
 die and assert can be used in a subshell
 ----------------------------------------
@@ -944,6 +1006,8 @@ for subshells in bash code.
     }
 
 
+.. _nonfatal:
+
 nonfatal implemented both as function and external command
 ----------------------------------------------------------
 The second change is specifying how ``nonfatal`` should be implemented.
@@ -994,6 +1058,8 @@ or ``xargs`` in more natural way.
     }
 
 
+.. _domo:
+
 domo install path corrected
 ---------------------------
 In earlier EAPIs, the ``domo`` function (used to install localizations)
@@ -1003,6 +1069,9 @@ which installed data files to ``/usr/share`` independently of the prefix
 set.  EAPI 7 modifies ``domo`` to stop respecting the prefix and also
 use ``/usr/share`` unconditionally.
 
+
+.. _`|| ( )`:
+.. _`^^ ( )`:
 
 Empty dependency groups no longer satisfy dependencies
 ------------------------------------------------------
@@ -1043,6 +1112,13 @@ dependencies while an empty at-most-one-of (``??``) group does.
 Profile changes
 ===============
 
+.. _package.mask:
+.. _package.use:
+.. _package.use.force:
+.. _package.use.mask:
+.. _use.force:
+.. _use.mask:
+
 Directories in profiles supported (not for ::gentoo!)
 -----------------------------------------------------
 EAPI 7 allows a number of files in the ``profiles`` subtree to
@@ -1071,6 +1147,8 @@ using regular files for the time being.  In other words, it's intended
 as convenience for Gentoo forks (which amend Gentoo profiles) and other
 third-party repositories.
 
+
+.. _package.provided:
 
 package.provided is gone for good
 ---------------------------------
@@ -1165,6 +1243,99 @@ of the enabled implementations.
 
 This feature was rejected by the Council.  It also had no implementation
 in Portage.
+
+
+Cheat sheet / index
+===================
+The table following lists all the changes in a grep-for form that could
+be used as a reference when upgrading ebuilds from EAPI 6 to EAPI 7.
+
+  ==================== =================================================
+  Search term          Change
+  ==================== =================================================
+  EAPI commands / functions
+  ----------------------------------------------------------------------
+  assert_              now legal in subshell
+  best_version_        -b, -d, -r for different dependency types
+  die_                 now legal in subshell
+  dohtml_              removed; replacement: ``dodoc -r``, ``docinto``
+  dolib_               removed; replacement: ``dolib.a``, ``dolib.so``
+  domo_                no longer respects ``into``, always uses /usr
+  dostrip_             new command; controls stripping per file
+  eapply_              GNU patch 2.7 guaranteed, git patches supported
+  eapply_user_         GNU patch 2.7 guaranteed, git patches supported
+  ebegin_              no longer outputs to stdout
+  econf_               passes --build, --target, --with-sysroot
+  eend_                no longer outputs to stdout
+  einfo_               no longer outputs to stdout
+  elog_                no longer outputs to stdout
+  eqawarn_             new command; prints QA warning for devs
+  has_version_         -b, -d, -r for different dependency types
+  libopts_             removed; replacement: ``doins`` w/ ``get_libdir``
+  nonfatal_            implemented both as external helper and function
+  ver_cut_             new command; cuts components from version string
+  ver_rs_              new command; replaces separators in version str
+  ver_test_            new command; compares two versions
+  -------------------- -------------------------------------------------
+  Eclass functions
+  ----------------------------------------------------------------------
+  domenu               provided by desktop.eclass_
+  domenu               provided by desktop.eclass_
+  ecvs_clean           provided by vcs-clean.eclass_
+  egit_clean           provided by vcs-clean.eclass_
+  epatch               banned; see epatch.eclass_
+  eshopts_*            provided by estack.eclass_
+  estack_*             provided by estack.eclass_
+  esvn_clean           provided by vcs-clean.eclass_
+  eumask_*             provided by estack.eclass_
+  evar_*               provided by estack.eclass_
+  make_desktop_entry   provided by desktop.eclass_
+  make_session_desktop provided by desktop.eclass_
+  newicon              provided by desktop.eclass_
+  newmenu              provided by desktop.eclass_
+  preserve_old_lib     provided by preserve-libs.eclass_
+  prune_libtool_files  banned; see ltprune.eclass_
+  -------------------- -------------------------------------------------
+  Eclasses
+  ----------------------------------------------------------------------
+  eapi7-ver.eclass_    banned; all built-in in EAPI 7
+  epatch.eclass_       banned; replacement: ``eapply`` (built-in)
+  eutils.eclass_       most functions moved into different eclasses
+  ltprune.eclass_      banned; replacement by inline snippet
+  versionator.eclass_  banned; replacement: ver_cut_, ver_rs_, ver_test_
+  -------------------- -------------------------------------------------
+  Variables
+  ----------------------------------------------------------------------
+  BDEPEND_             new metadata var; for CBUILD build-dependencies
+  BROOT_               new variable; location where BDEPEND is installed
+  DEPEND_              split into DEPEND (CHOST) and BDEPEND (CBUILD)
+  DESTTREE_            removed; replacement: ``into``
+  D_                   no longer ends with a trailing slash
+  ECLASSDIR_           removed; no replacement
+  ED_                  no longer ends with a trailing slash
+  ENV_UNSET_           new profile var; blacklists envvars from host
+  EROOT_               no longer ends with a trailing slash
+  ESYSROOT_            new variable; SYSROOT + EPREFIX
+  INSDESTTREE_         removed; replacement: ``insinto``
+  PORTDIR_             removed; no replacement
+  ROOT_                no longer ends with a trailing slash
+  SYSROOT_             new variable; location where DEPEND is installed
+  -------------------- -------------------------------------------------
+  Profile files
+  ----------------------------------------------------------------------
+  package.mask_        can be a directory now
+  package.provided_    banned from profiles
+  package.use.force_   can be a directory now (+ stable variant)
+  package.use.mask_    can be a directory now (+ stable variant)
+  package.use_         can be a directory now
+  use.force_           can be a directory now (+ stable variant)
+  use.mask_            can be a directory now (+ stable variant)
+  -------------------- -------------------------------------------------
+  Other
+  ----------------------------------------------------------------------
+  `^^ ( )`_            empty exactly-one-of group now evaluates as false
+  `|| ( )`_            empty any-of group now evaluates as false
+  ==================== =================================================
 
 
 References
