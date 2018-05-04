@@ -1279,7 +1279,7 @@ be used as a reference when upgrading ebuilds from EAPI 6 to EAPI 7.
   -------------------- -------------------------------------------------
   Eclass functions
   ----------------------------------------------------------------------
-  domenu               provided by desktop.eclass_
+  doicon               provided by desktop.eclass_
   domenu               provided by desktop.eclass_
   ecvs_clean           provided by vcs-clean.eclass_
   egit_clean           provided by vcs-clean.eclass_
