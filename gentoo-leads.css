@@ -1,0 +1,81 @@
+@import url('https://wiki.gentoo.org/load.php?debug=false&lang=en&modules=ext.echo.badgeicons%7Cext.echo.styles.badge%7Cext.uls.nojs%7Cmediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.tyrian.styles&only=styles&skin=tyrian');
+@import url('https://assets.gentoo.org/tyrian/bootstrap.min.css');
+@import url('https://assets.gentoo.org/tyrian/tyrian.min.css');
+
+.date-column { min-width: 10em; }
+.term-start { border-top: 2px solid #aaa; }
+
+.agriffis { background: yellow; }
+.alicef { }
+.amne { }
+.antarus { }
+.avenj { }
+.azarah { background: indigo; color: white; }
+.betelgeuse { background: blueviolet; color: white; }
+.blueness { background: blue; color: white; }
+.calchan { }
+.cardoe { }
+.carpaski { background: cyan; }
+.chainsaw { background: chartreuse; }
+.cshields { background: greenyellow; }
+.dabbott { background: slategray; color: white; }
+.dberkholz { background: cadetblue; color: white; }
+.dertobi123 { background: darkgreen; color: white; }
+.dilfridge { background: aliceblue; }
+.dmwaters { background: thistle; }
+.dostrow { }
+.ferringb { }
+.flameeyes { background: darkseagreen; }
+.fmccor { }
+.g2boojum { background: dimgray; color: white; }
+.grobian { background: cornflowerblue; color: white; }
+.halcy0n { background: deeppink; }
+.hwoarang { }
+.iggy { }
+.jaervosz { }
+.jhuebel { }
+.jlec { background: chocolate; }
+.jmbsvicetto { background: darkcyan; color: white; }
+.jokey { background: fuchsia; }
+.kensington { }
+.k_f { background: antiquewhite; }
+.kingtaco { }
+.klieber { background: seagreen; color: white; }
+.kloeri { }
+.klondike { }
+.koon { }
+.kugelfang { }
+.kumba { }
+.leio { background: darkmagenta; color: white; }
+.lu_zero { background: crimson; color: white; }
+.method { background: black; color: white; }
+.mgorny { }
+.neddyseagoon { background: limegreen; }
+.patrick { }
+.pauldv { background: lightgray; }
+.pfeifer { }
+.prometheanfire { }
+.pvdabeel { }
+.pylon { }
+.quantumsummers { background: mediumaquamarine; }
+.radhermit { }
+.ramereth { }
+.rich0 { background: brown; color: white; }
+.robbat2 { background: lightblue; }
+.scarabeus { background: coral; }
+.seemant { background: lavender; }
+.slyfox { }
+.solar { background: darkorange; }
+.swift { background: khaki; }
+.tamiko { }
+.tgall { }
+.tsunam { background: navy; color: white; }
+.uberlord { background: gold; }
+.ulm { background: aquamarine; }
+.vapier { background: darkolivegreen; color: white; }
+.williamh { background: bisque; }
+.wired { }
+.wltjr { }
+.wolf31o2 { }
+.zhen { }
+.zlg { }
