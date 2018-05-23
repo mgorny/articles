@@ -3,6 +3,7 @@
 @import url('https://assets.gentoo.org/tyrian/tyrian.min.css');
 
 .date-column { min-width: 10em; }
+.empty { background: repeating-linear-gradient(-45deg, white, white 4px, gray 5px, white 6px); }
 .term-start { border-top: 2px solid #aaa; }
 
 .agriffis { background: yellow; }
@@ -24,7 +25,8 @@
 .dilfridge { background: aliceblue; }
 .dmwaters { background: thistle; }
 .dostrow { }
-.ferringb { }
+.drobbins { background: lightskyblue; }
+.ferringb { background: saddlebrown; color: white }
 .flameeyes { background: darkseagreen; }
 .fmccor { }
 .g2boojum { background: dimgray; color: white; }
@@ -32,7 +34,7 @@
 .halcy0n { background: deeppink; }
 .hwoarang { }
 .iggy { }
-.jaervosz { }
+.jaervosz { background: lemonchiffon; }
 .jhuebel { }
 .jlec { background: chocolate; }
 .jmbsvicetto { background: darkcyan; color: white; }
@@ -43,7 +45,7 @@
 .klieber { background: seagreen; color: white; }
 .kloeri { }
 .klondike { }
-.koon { }
+.koon { background: orangered; color: white; }
 .kugelfang { }
 .kumba { }
 .leio { background: darkmagenta; color: white; }
@@ -55,11 +57,11 @@
 .pauldv { background: lightgray; }
 .pfeifer { }
 .prometheanfire { }
-.pvdabeel { }
+.pvdabeel { background: mediumturquoise; }
 .pylon { }
 .quantumsummers { background: mediumaquamarine; }
 .radhermit { }
-.ramereth { }
+.ramereth { background: mediumvioletred; color: white; }
 .rich0 { background: brown; color: white; }
 .robbat2 { background: lightblue; }
 .scarabeus { background: coral; }
@@ -77,5 +79,5 @@
 .wired { }
 .wltjr { }
 .wolf31o2 { background: royalblue; color: white;} 
-.zhen { }
+.zhen { background: lightcoral; }
 .zlg { }
