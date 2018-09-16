@@ -146,7 +146,7 @@ The license restrictions are mostly an extension of the Gentoo Social
 Contract [#SOCIAL-CONTRACT]_.  The choice of allowed licenses meant to
 cover a wide set of free software (documentation, …) licenses that our
 official and unofficial projects may want to use, while on the other
-hand limiting the ‘default’ set to licenses to compatible with the GPL.
+hand limiting the ‘default’ set to licenses compatible with the GPL.
 
 We've deliberately chosen to refer to FSF license list to avoid having
 to maintain our own list.
@@ -242,19 +242,19 @@ into the project.
     this project or the free software license(s) involved.
 
 In order to commit to any Gentoo project, you need to acknowledge
-the DCO by adding a *Signed-off-by* line to the footer of your commit
+the GCO by adding a *Signed-off-by* line to the footer of your commit
 (``git commit -s`` does that for you).  Since you're effectively making
 a legal statement, it is important that this line contains your real
 name and working e-mail address.
 
-The curious thing about the DCO is that it's recursive.  If somebody
-submits his work to you, he needs to acknowledge the DCO, and then you
-can acknowledge it via option (4).  Each DCO approval in this pipeline
+The curious thing about the GCO is that it's recursive.  If somebody
+submits his work to you, he needs to acknowledge the GCO, and then you
+can acknowledge it via option (4).  Each GCO approval in this pipeline
 creates an additional *Signed-off-by* line, making it possible to trace
 the contribution to its root.
 
 The policy additionally permits using the original Linux DCO 1.1
-[#DCO-1.1]_ when contributors do not wish to use our DCO.  This needs
+[#DCO-1.1]_ when contributors do not wish to use our GCO.  This needs
 to be explicitly noted via appending ``(DCO-1.1)``
 to the *Signed-off-by* line.  Please note that you aren't legally
 allowed to commit licenses this way!
@@ -267,17 +267,17 @@ allowed to commit licenses this way!
 
 **How should contributions from third parties be dealt with?**
   Any copyrightable contribution (i.e. extending beyond trivial changes
-  such as typo fixes) needs DCO being acknowledged by its author.
+  such as typo fixes) needs GCO being acknowledged by its author.
   Preferably, he'd do it by inserting *Signed-off-by* into his patch,
   or otherwise permitting you to do that.  Afterwards, you acknowledge
-  DCO via point (4), and/or (2) if you have modified it, and add your
+  GCO via point (4), and/or (2) if you have modified it, and add your
   own *Signed-off-by* below his.
 
 **Can I use patches/code that I found online?**
   Only if you are certain that you are entitled to use it, according
   to point (2).  In other words, the code should clearly indicate that
   it's covered by a compatible free software license.  If it does not,
-  you need to find its author and request his DCO approval
+  you need to find its author and request his GCO approval
   and afterwards use it according to point (4).
 
 **Does ordering of Signed-off-by matter?**
