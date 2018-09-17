@@ -2,7 +2,7 @@
 New Gentoo copyright policy explained (draft)
 =============================================
 :Author: Michał Górny
-:Date: 2018-09-16
+:Date: 2018-09-17
 :Version: 1.0
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
@@ -204,6 +204,10 @@ and relicensing software, you can read my ‘copyright 101’ [#COPY-101]_.
   again, please note that *you need to obtain permission from copyright
   holders before relicensing the repository.*
 
+**Can I add non-GPL ebuilds to the Gentoo repository now?**
+  No, the Gentoo ebuild repository still requires GPL-2 as a tree
+  policy.
+
 
 Certificate of origin approval
 ==============================
@@ -329,70 +333,51 @@ to contribute to Gentoo (e.g. when your employer claims copyright on all
 your work).
 
 The policy provides two methods of attributing copyright in files:
-complete and simplified.
+complete and simplified.  The simplified method is recommended whenever
+tracking the exact authorship of code could be a problem, e.g. due
+to a large number of authors in ebuilds.
 
-With the complete method, the copyright lines in ebuilds will usually
-look like::
-
-    # Copyright START[-END] LARGEST-OWNER [and others]
-
-With the simplified method, the copyright line will be::
+With the simplified method, the copyright line will usually look like::
 
     # Copyright START[-END] Gentoo Authors
+
+With the complete method, it would be::
+
+    # Copyright START[-END] LARGEST-OWNER [and others]
 
 *START* indicates the earliest year that the listed owners claim
 copyright to the file.  *END* indicates the latest.  *LARGEST-OWNER* is
 the name of the person (or company) holding copyright to the most
 of the file (this might be hard to determine), and the *‘and others’*
 formula is used whenever there are more copyright holders (so that you
-don't have to list them all).
+don't have to list them all).  Alternatively, the *‘Gentoo Authors’*
+formula is used to represent all authors without listing anyone
+explicitly.
 
-What to put there, exactly?  As a rule of thumb, you can use
-the following algorithm:
-
-If you are copying an existing ebuild, start with its current copyright
-line.  If you are creating an entirely new ebuild from scratch, put
-the current year as *START* and your name as *LARGEST-OWNER*.
-
-Now, every time you update the ebuild:
-
-1. Update *END* to the current year.  If both *START* and *END* are
-   the same, you list the year only once.
-
-2. If you believe you own the majority of the copyright to the file
-   at this point, you can set *LARGEST-OWNER* to yourself.  If there
-   were any other copyright holders, make sure to include
-   *‘and others’*.
-
-3. If you made any copyrightable change to the file and you are not
-   listed as *LARGEST-OWNER*, add *‘and others’* formula if it's not
-   there.
-
-However, note that it's just an easy rule that aims to provide
-approximate data.  For example, it does not account for reusing code
-copied from other ebuilds (for which you can't claim copyright).  If you
-believe you can determine more precise copyright of the file, please
-by all means use that.
-
-In either case, you are still required to track authorship.  If you are
-using a VCS, it is enough that the list of all authors can be obtained
-from its logs.  Otherwise, you should maintain an ``AUTHORS`` file
-listing all the authors.
+With either method, you are still required to track authorship.  If you
+are using a VCS, it is enough that the list of all authors (copyright
+owners) can be obtained from its logs.  Otherwise, you should maintain
+an ``AUTHORS`` file listing them.
 
 
 **Can I continue attributing Gentoo Foundation?**
-  This is not possible at the moment.  It might be allowed
-  in the future under a separate terms.
+  This is not possible at the moment.  It might be allowed in the future
+  under separate terms.  For time being, we recommend attributing
+  ‘Gentoo Authors’ instead.
 
 **What about Gentoo Foundation copyright on existing ebuilds?**
-  If in doubt, start with the assumption that Gentoo Foundation is
-  the *LARGEST-OWNER*, and update it as outlined above.  If you are sure
-  that you qualify as the copyright owner, feel free to put yourself
-  there immediately (include *‘and others’* if anyone else contributed).
+  Preferably convert it to ‘Gentoo Authors’ when you modify the file.
 
-**When can the simplified attribution be used?**
+**When should the simplified/complete attribution be used?**
   The policy does not define limits on using either form.  Use whichever
-  you find more suitable to your purpose.
+  you find more suitable to your purpose.  We generally recommend
+  simplified attribution whenever exact authorship tracking would
+  be hard (e.g. due to a large number of authors).
+
+**Can I replace complete copyright attribution with simplified?**
+  Generally, yes, as long as the original copyright holder can
+  be tracked down via VCS or AUTHORS file.  However, if somebody put
+  an explicit copyright notice, it would be polite to ask him first.
 
 **I have signed an exclusive copyright assignment.  Can I contribute?**
   Yes, you can.  If your employer or any other entity holds copyright
