@@ -7,11 +7,6 @@ New Gentoo copyright policy explained (draft)
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
 
-.. WARNING::
-   This is a draft article in process of being reviewed.  Please take
-   its statements with caution.
-
-
 .. contents::
 
 
@@ -158,8 +153,8 @@ and relicensing software, you can read my ‘copyright 101’ [#COPY-101]_.
 
 
 **What about licenses approved by Open Software Initiative?**
-  Many of the OSI-approved licenses are already covered by the allowed
-  license statement above.  If you would like to use one that isn't,
+  Many of the OSI-approved licenses are also approved as GPL compatible
+  by the FSF [#GPL-COMPAT]_.  If you would like to use one that isn't,
   please follow the procedure for other open source licenses below.
 
 **What about other open source licenses?**
