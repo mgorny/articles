@@ -2,8 +2,8 @@
 New Gentoo copyright policy explained (draft)
 =============================================
 :Author: Michał Górny
-:Date: 2018-09-17
-:Version: 1.0
+:Date: 2018-10-25
+:Version: 1.1
 :Copyright: http://creativecommons.org/licenses/by/3.0/
 
 
@@ -246,6 +246,14 @@ the GCO by adding a *Signed-off-by* line to the footer of your commit
 a legal statement, it is important that this line contains your real
 name and working e-mail address.
 
+To enable automatic sign-off addition in repoman, set the following
+variable in make.conf::
+
+    DCO_SIGNED_OFF_BY="Your Real Name <email@gentoo.org>"
+
+Please note that while the historical variable name references DCO,
+its use on top of Gentoo projects will imply GCO.
+
 The curious thing about the GCO is that it's recursive.  If somebody
 submits his work to you, he needs to acknowledge the GCO, and then you
 can acknowledge it via option (4).  Each GCO approval in this pipeline
@@ -367,7 +375,8 @@ an ``AUTHORS`` file listing them.
   The policy does not define limits on using either form.  Use whichever
   you find more suitable to your purpose.  We generally recommend
   simplified attribution whenever exact authorship tracking would
-  be hard (e.g. due to a large number of authors).
+  be hard (e.g. due to a large number of authors).  Always use
+  the simplified form for ebuilds.
 
 **Can I replace complete copyright attribution with simplified?**
   Generally, yes, as long as the original copyright holder can
@@ -389,8 +398,10 @@ an ``AUTHORS`` file listing them.
   by other people.
 
 **Do I ever change START date?**
-  Rarely.  Technically, you could change it if old contributions are
-  no longer relevant to the current file.
+  Rarely.  Copyright law requires the “year of first publication”,
+  so the start date should only be changed if it is wrong.  Keep
+  the start date when copying a file, as it often is the case
+  for ebuilds.
 
 **Where should I report misattributed copyright?**
   If you believe that the copyright in some file is not attributed
