@@ -4,7 +4,7 @@ A short history of Gentoo copyright
 :Author: Michał Górny
 :Date: 2018-05-18
 :Version: 1.0
-:Copyright: http://creativecommons.org/licenses/by/3.0/
+:Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
 .. contents::

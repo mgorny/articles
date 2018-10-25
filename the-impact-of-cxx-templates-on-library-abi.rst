@@ -3,7 +3,7 @@ The impact of C++ templates on library ABI
 ==========================================
 :Author: Michał Górny
 :Date: 20 Aug 2012
-:Copyright: http://creativecommons.org/licenses/by/3.0/
+:Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
 Preamble

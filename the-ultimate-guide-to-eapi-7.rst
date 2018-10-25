@@ -4,7 +4,7 @@ The ultimate guide to EAPI 7
 :Author: Michał Górny
 :Date: 2018-05-03
 :Version: 1.0
-:Copyright: http://creativecommons.org/licenses/by/3.0/
+:Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
 .. contents::

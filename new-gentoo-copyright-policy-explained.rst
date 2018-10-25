@@ -4,7 +4,7 @@ New Gentoo copyright policy explained (draft)
 :Author: Michał Górny
 :Date: 2018-10-25
 :Version: 1.1
-:Copyright: http://creativecommons.org/licenses/by/3.0/
+:Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
 .. contents::

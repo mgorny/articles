@@ -4,7 +4,7 @@ The story of Gentoo management
 :Author: Michał Górny
 :Date: 2018-05-25
 :Version: 1.0
-:Copyright: http://creativecommons.org/licenses/by/3.0/
+:Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
 .. contents::
