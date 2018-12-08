@@ -801,7 +801,7 @@ Judging by the test results, the most portability could be achieved by:
 
 - using strict POSIX ustar format whenever possible,
 
-- using GNU format for long paths (that do not fix in ustar format),
+- using GNU format for long paths (that do not fit in ustar format),
 
 - using base-256 (+ pax if already used) encoding for large files,
 
