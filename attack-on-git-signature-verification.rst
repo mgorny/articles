@@ -1,8 +1,8 @@
-======================================================================
-Attacks on git signature verification via crafting multiple signatures
-======================================================================
+=====================================================================
+Attack on git signature verification via crafting multiple signatures
+=====================================================================
 :Author: Michał Górny
-:Date: 2018-08-14
+:Date: 2019-01-26
 :Version: 1.0
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
@@ -12,10 +12,10 @@ Attacks on git signature verification via crafting multiple signatures
 
 Abstract
 ========
-This article shortly explains the git weaknesses regarding handling
-commits and tags with multiple OpenPGP signatures.  The method of
-creating such commits and tags is presented, and the results of using
-them are described and analyzed.
+This article shortly explains the historical git weakness regarding
+handling commits with multiple OpenPGP signatures in git older than
+v2.20.  The method of creating such commits is presented,
+and the results of using them are described and analyzed.
 
 
 Background
@@ -61,45 +61,6 @@ and strips it from the commit object.  The remaining part of the commit
 object is afterwards verified using the detached signature.
 
 
-Git tag signatures
-------------------
-Independently of underlying commits, git tags also can contain OpenPGP
-signatures.  Signed tags are created using ``git tag --sign`` (``-s``).
-
-For a signed tag, the OpenPGP ASCII-armored signature is appended to
-the commit object.  In this regard, the tag resembles an inline OpenPGP
-signed message, except for missing the message header line.  An example
-git signed tag follows::
-
-    object ed513bf746c9d4d609ccec85230be1793c197b51
-    type commit
-    tag good-tag
-    tagger Michał Górny <mgorny@gentoo.org> 1534251684 +0200
-
-    Good signed tag
-    -----BEGIN PGP SIGNATURE-----
-
-    iQKTBAABCgB9FiEEXr8g+Zb7PCLMb8pAur8dX/jIEQoFAlty0qpfFIAAAAAALgAo
-    aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDVF
-    QkYyMEY5OTZGQjNDMjJDQzZGQ0E0MEJBQkYxRDVGRjhDODExMEEACgkQur8dX/jI
-    EQpvKxAA7SrbK2OZ5An20vVSsMQRNrEcxVJahcZUNF7DPVywO3WyBmgnPis7ZtgQ
-    CReKe/7s4kMhRH3JUaUCZXaHuZxCQgwCp/yQudDtyL2Z2InEbN9bhjtps58RHaNr
-    NIGrOiRobMa0DxHmbLjV3QhR8LMQL4FX/vp5ujkZxQZpPIHlVyv0sxyeDKayVbNV
-    eqX1ygh3AiZtU7j9d7Vk1A5NyTbreeqP0AGSgJazYY0YPxPIevRq6IKhGsewmt/V
-    d3hkQG16g5FCmGYmkbjgij9jjWKLvQeAcBj4r72HFcbQAB09QTitgjwPQT3KI9ev
-    Ob1fhn7PLOyh3zF1HpBVa3z5HnMfvJws5DC5RJz94Zy4+CF4cjlDjX2YE/s7Y+EI
-    eVvGjKbAE4a9s+mSV+Qkt/8AY8ZKKwWucfvtMrzKdhb5icHA/nPRdVOgElS9cBBM
-    UiXxAXHc1n6ILQQV7s8oSwJDXRscdln/gOF5VXM/O6eNXP7d0672dUHaIwNWevKy
-    nP0rdgIbwNtQSpvTVIT2O2Mei7Brd7Dt/MgDwHNPc3jHpa2xdhK4Ki9Lh38wRu0Q
-    PQpfvXTohoYbhc31OnYSR7RWX5/IGb441Rglbt/xRCvpbXC8D9ctkZmU/rumu3KO
-    utPujUAdoVxcsbVzj1Ri8Rx+swWy9DWDotRPKRRVip+xww4kRWY=
-    =whlN
-    -----END PGP SIGNATURE-----
-
-This signature can be verified by moving the signature into a separate
-file (making it detached) and stripping it off the original file.
-
-
 Multiple OpenPGP signatures
 ---------------------------
 The GnuPG implementation of OpenPGP supports creating multiple
@@ -120,9 +81,9 @@ In order to verify signatures, git spawns ``gpg --verify ...``
 with the ``--status-fd`` option and processes its machine-oriented
 output.  It discards the exit status of GnuPG.
 
-The output is processed through scanning it for a number of status
-codes.  The code as of 2018-08-03 (from the git repository) uses
-the following array::
+The output is processed by scanning it for a number of status codes.
+The code as of 2018-08-03 (from the git repository) uses the following
+array::
 
     static struct {
         char result;
@@ -142,22 +103,11 @@ Git scans the whole buffer for those status strings, in order.  It does
 not interrupt the search upon finding one of the strings; therefore
 the later statuses override the earlier ones.  Finally, it returns
 a structure containing the result code along with appropriate key
-identifier and UID.
+identifier and UID.  [#GIT-OLD-CODE]_
 
-
-Git tag signature verification
-------------------------------
-Similarly to commit signature verification, tag verification also uses
-``gpg --verify`` with ``--status-fd`` option.  However, it does not
-process its output completely and merely matches it for the presence
-of ``GOODSIG`` status.
-
-
-Attack on commit signatures
-===========================
 
 Summary
--------
+=======
 The attack is based on replacing the original commit object with
 a crafted commit.  The crafted commit can contain altered data —
 for example, the tree reference could be replaced with a tree containing
@@ -175,9 +125,9 @@ Effectively, the crafted commit contains two OpenPGP signatures:
 
 Upon processing this commit, git fails to distinguish the two signatures
 properly.  Depending on whether the key used to create the crafted
-commit signature is in user's keyring or it isn't, and whether it's
-trusted by the user (presuming the trusted key is), the signature-
-related format strings work as listed in the table:
+commit signature is in user's keyring, and whether it's trusted
+by the user (presuming the trusted key is), the signature-related
+format strings work as listed in the table:
 
   ======= ================ ============= ===========
   Format  Not in keyring   Untrusted     Trusted
@@ -189,30 +139,43 @@ related format strings work as listed in the table:
 
 
 Impact
-------
+======
 Since in no case the result is reported as good, this issue does not
 impact the result of ``--verify-signatures`` option.  However, it could
 be exploited to confuse custom signature verification scripts using
 the format strings.
 
 The worst possible case occurs when the attacker's key is present
-in user's keyring.  This could occur e.g. if the key is present
-on the keyservers and the user is using ``auto-key-retrieve`` GnuPG
-option, or if the key was used for some legitimate purpose before.
-In this scenario, the second signature downgrades the classification
-from ‘B’ (bad signature) to ‘U’ (untrusted key).  Given that it is
-common for users to verify using untrusted keys, the attack could easily
-be overlooked.
+in user's keyring but it is not trusted.  This could occur e.g.
+if the key is present on the keyservers and the user is using
+``auto-key-retrieve`` GnuPG option, or if the key was used for some
+legitimate purpose before.  In this scenario, the second signature
+downgrades the classification from ‘B’ (bad signature) to ‘U’ (untrusted
+key).  Given that it is common for users to verify using untrusted keys,
+the attack could easily be overlooked.  However, this is really no
+different from replacing the signature altogether.
 
-What is even worse, the ``%GK`` and ``%GS`` formats both report
-on the other key rather than the one reported as untrusted.  This means
-that if a script accepts untrusted signatures after verifying the key
-identifier as reported by ``%GK``, the script would wrongly consider
-the commit correctly signed by the trusted key.
+The real problem is that the ``%GK`` and ``%GS`` format strings both
+report the trusted key data rather than the one reported as untrusted
+(and corresponding to ``%G?``).  This means that if a script verifies
+trust based on reported key identifer, it would wrongly consider
+the commit as correctly signed using the trusted key.
 
 
-Detailed outline of test case
------------------------------
+Solution
+========
+The problem has been resolved upstream via refactoring the status output
+processing code to detect multiple exclusive statuses (indicating
+multiple signatures present) and explicitly consider the case
+unsupported (reported as ``E``).  This fix has been included in v0.20.0.
+[#COMMIT-DA6CF1B336]_
+
+
+Detailed outline of the test case
+=================================
+
+Constructing the test case
+--------------------------
 Given a repository with signed commits, the test case can be built
 as outlined below:
 
@@ -305,75 +268,20 @@ Finally, git matches a number of negative statuses starting with
 in the local keyring, and it overrides the previous status.  However, it
 carries only the key ID but not UID, so it overrides only the former.
 
-
-Attack on tag signatures
-========================
-
-Summary
--------
-The attack is based on replacing the original tag object with a crafted
-tag.  The crafted tag can contain altered data — usually referencing
-a malicious commit.  The tag signature is replaced by a concatenation
-of the original signature and an untrusted signature of the updated tag.
-
-Effectively, the crafted tag contains two OpenPGP signatures:
-
-1. The original OpenPGP signature that was made with a trusted key
-   but does not correspond to the current data (is bad).
-
-2. The crafted tag signature that was made with an untrusted key but
-   is valid.
-
-Upon processing this tag, git fails to account for two signature being
-present.  Instead, if the key used by attacker is present in the local
-keyring, it assumes that the signature is good and returns successful
-verification result.
+Therefore, the check result (``%G?``) will represent either untrusted
+key (``U``) or verification error (``E``).  However, since neither
+of those statuses provides UID, the UID previously obtained from
+``BADSIG`` will be returned instead.  Furthermore, since ``TRUST_*``
+does not contain key identifier, the one from ``BADSIG`` will also be
+preserved in the untrusted branch.
 
 
-Impact
-------
-This attempt can only be exploited if the key used by the attacker is
-present in the local keyring.  The result of using two signatures is
-not different from the result of replacing the it with a single
-untrusted signature.  Therefore, the attack does not expose any
-additional weakness beyond git not distinguishing signatures made using
-untrusted key.
+References
+==========
 
+.. [#GIT-OLD-CODE] gpg-interface.c @ 1e7adb9 (2018-07-18)
+   (https://github.com/git/git/blob/1e7adb97566bff7d3431ce64b8d0d854a6863ed5/gpg-interface.c#L78)
 
-Detailed outline of test case
------------------------------
-Given a repository with signed tags, the test case can be built
-as outlined below:
-
-1. Create a malicious replacement commit for the tag.
-
-2. Obtain the raw data of a signed tag using ``git cat-file -p
-   <tag-name>``.
-
-3. Move the ASCII-armored signature of the original tag and store it
-   in a regular text file.
-
-4. Strip the signature out of tag file.
-
-5. Verify the correctness of the above steps using ``gpg --verify
-   <orig-signature-file> <stripped-tag-file>``.
-
-6. Dearmor the original signature using ``gpg --dearmor
-   <orig-signature-file>``.
-
-7. Alter the tag data, e.g. by replacing the object reference with
-   the malicious commit identifier.
-
-8. Create a detached (binary) signature for the new commit data using
-   ``gpg -u <key-id> --detach-sign <stripped-tag-file>``.
-
-9. Concatenate both signatures and rearmor them using ``cat
-   <orig-signature-file> <new-signature-file> | gpg --enarmor``.
-
-10. Add the signature to the new tag file using the original header/
-    footer and the base64 armored data from the enarmored file.
-
-11. Inject the crafted commit using ``git hash-object -t tag -w
-    <new-tag-file>``.
-
-12. Update the tag using ``git tag -f <tag-name> <new-tag-id>``.
+.. [#COMMIT-DA6CF1B336] gpg-interface.c: detect and reject multiple
+   signatures on commits
+   (https://github.com/git/git/commit/da6cf1b3360eefdce3dbde7632eca57177327f37)
