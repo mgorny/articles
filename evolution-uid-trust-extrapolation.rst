@@ -216,3 +216,13 @@ References
 .. [#EVOLUTION-BUG-REPORT] Potential vulnerability: gpg key trust
    extrapolation to new UIDs · Issues · GNOME / evolution · GitLab
    (https://gitlab.gnome.org/GNOME/evolution/issues/299)
+
+
+Comments
+========
+The comments to this article are maintained as part of the relevant
+blog entry: `Evolution: UID trust extrapolation attack on OpenPGP
+signatures`_.
+
+.. _`Evolution: UID trust extrapolation attack on OpenPGP signatures`:
+   https://blogs.gentoo.org/mgorny/2019/01/31/evolution-uid-trust-extrapolation-attack-on-openpgp-signatures/#comments

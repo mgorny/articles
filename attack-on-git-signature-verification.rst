@@ -278,10 +278,19 @@ preserved in the untrusted branch.
 
 References
 ==========
-
 .. [#GIT-OLD-CODE] gpg-interface.c @ 1e7adb9 (2018-07-18)
    (https://github.com/git/git/blob/1e7adb97566bff7d3431ce64b8d0d854a6863ed5/gpg-interface.c#L78)
 
 .. [#COMMIT-DA6CF1B336] gpg-interface.c: detect and reject multiple
    signatures on commits
    (https://github.com/git/git/commit/da6cf1b3360eefdce3dbde7632eca57177327f37)
+
+
+Comments
+========
+The comments to this article are maintained as part of the relevant
+blog entry: `Attack on git signature verification via crafting multiple
+signatures`_.
+
+.. _`Attack on git signature verification via crafting multiple signatures`:
+   https://blogs.gentoo.org/mgorny/2019/01/26/attack-on-git-signature-verification-via-crafting-multiple-signatures/#comments
