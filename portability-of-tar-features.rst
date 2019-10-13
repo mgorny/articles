@@ -3,7 +3,7 @@ Portability of tar features
 ===========================
 :Author: Michał Górny
 :Date: 2018-11-25
-:Version: 1.0
+:Version: 1.1
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
@@ -609,8 +609,7 @@ Multi-volume archives
 ---------------------
 GNU tar and star support creating multi-volume archives.  However,
 the multi-volume format is mostly intended for tape drives, and is
-either inconvenient (requiring manually typing filenames) or completely
-broken (vanilla star just hangs when switching files) for regular files.
+inconvenient (requiring manually typing filenames) for regular files.
 With files, using split(1) is a better idea.
 
 GNU tar can create multi-volume archives either with GNU tar or pax
