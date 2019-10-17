@@ -3,7 +3,7 @@ Improving distfile mirror structure
 ===================================
 :Author: Michał Górny
 :Date: 2019-10-13
-:Version: 1.0
+:Version: 1.2
 :Copyright: https://creativecommons.org/licenses/by/4.0/
 
 
@@ -99,21 +99,39 @@ and includes 1120 files.  All other apparent groups have less than
 
 .. figure:: improving-distfile-mirror-structure/distfile-count-over-time.svg
 
-   Figure 1: number of distfiles in the Gentoo repository
+   Figure 1a: number of distfiles in the Gentoo repository
 
-The plot in figure 1 presents the number of uniquely-named distfiles
-in the Gentoo repository, as indicated by either the historical digest
-files or the newer Manifest2 format.  The totals were omitted from
-the plot since they were indistinguishable from the higher of the two
-values.
+.. figure:: improving-distfile-mirror-structure/distfile-size-changes.svg
+
+   Figure 1b: monthly distfile removals and additions
+
+The plot in figure 1a presents the number of uniquely-named distfiles
+in the Gentoo repository and their respective total size, as indicated
+by either the historical digest files or the newer Manifest2 format.
+The totals were omitted from the plot since they were indistinguishable
+from the higher of the two values.  The plot in figure 1b presents
+total size of removed and added distfiles compared to the previous
+month.  [#PLOT-NOTE]_
 
 The plot shows a rather steady incline of total distfile counts, with
 noticeable peaks corresponding to major version bumps (especially TeΧ
 Live), and troughs matching the removal of old versions.
 
+There are also noticeable peaks on the size plot that correspond
+to adding very large files, especially lately.  It is interesting that
+the rapid decline of distfile count around 2017 did not correspond
+with major reduction of total size — indicating that a large amount
+of small files were removed.
+
 .. [#DIST-NOTE] The count of distfiles indicated by Manifests is rough,
    since I did not precisely filter all fetch- or mirror-restricted
    packages.
+
+.. [#PLOT-NOTE] The data used for plot was not filtered for fetch-
+   or mirror-restricted packages.  Therefore, it is unsurprising that
+   it vastly exceeds the actual space used on the mirrors.  Sadly,
+   filtering historical data is non-trivial and would be very
+   time-consuming.
 
 
 Proposed replacement layouts
