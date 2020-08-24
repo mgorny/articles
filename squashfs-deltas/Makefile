@@ -1,11 +1,20 @@
-view: squashfs-deltas.pdf
+PDF = squashfs-deltas.pdf
+EXTRA = \
+	$(patsubst %.pdf,%.aux,$(PDF)) \
+	$(patsubst %.pdf,%.log,$(PDF)) \
+	$(patsubst %.pdf,%.out,$(PDF))
+
+view: $(PDF)
 	xdg-open $<
-all: squashfs-deltas.pdf
+all: $(PDF)
+
+clean:
+	rm -f $(PDF) $(EXTRA)
 
 .PHONY: view all
-.SUFFIXES: .ltx .pdf
 
-.ltx.pdf:
-	xelatex $<
+%.pdf: %.ltx
+	xelatex $< || rm $@
+	xelatex $< || rm $@
 
 squashfs-deltas.pdf: $(glob data/*)
