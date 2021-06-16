@@ -9,9 +9,12 @@ RST = \
 	portability-of-tar-features.rst \
 	the-impact-of-cxx-templates-on-library-abi.rst \
 	the-story-of-gentoo-management.rst \
-	the-ultimate-guide-to-eapi-7.rst
+	the-ultimate-guide-to-eapi-7.rst \
+	the-ultimate-guide-to-eapi-8.rst
 RST2HTML = $(patsubst %.rst,%.html,$(RST))
-HTML = $(RST2HTML)
+HTML = $(RST2HTML) \
+	gentoo-management.css \
+	gentoo-management.html
 PDF = \
 	reducing-squashfs-delta-size-through-partial-decompression.pdf \
 	using-deltas-to-speed-up-squashfs-ebuild-repository-updates.pdf
