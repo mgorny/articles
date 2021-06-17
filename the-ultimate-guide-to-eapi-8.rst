@@ -210,11 +210,11 @@ libraries.  [#QA-POLICY-STATIC]_
 
 PROPERTIES and RESTRICT are now accumulated across eclasses
 -----------------------------------------------------------
-Up to EAPI 7, ``PROPERTIES`` and ``RESTRICT`` were treated like
-a regular bash variables when sourcing eclasses.  This meant that
-if an eclass or an ebuild wanted to modify them, they had to explicitly
-append to them, e.g. via ``+=``.  This was inconsistent with how some
-other variables (but not all) were handled, and confusing to developers.
+Up to EAPI 7, ``PROPERTIES`` and ``RESTRICT`` were treated like regular
+bash variables when sourcing eclasses.  This meant that if an eclass
+or an ebuild wanted to modify them, they had to explicitly append
+to them, e.g.  via ``+=``.  This was inconsistent with how some other
+variables (but not all) were handled, and confusing to developers.
 For example, consider the following snippet:
 
 .. code-block:: bash
