@@ -250,6 +250,11 @@ providing default values and the ebuilds being able to override them.
 
 dosym -r to create relative symlinks
 ------------------------------------
+.. Note::
+
+   TL;DR: ``-r`` now can be used to have dosym figure out the correct
+   relative path from symlink to target.
+
 We have been pushing for relative symlink targets for some time now,
 as they are more reliable.  Consider the two following examples:
 
@@ -544,6 +549,7 @@ In EAPI 8, they always use the default options.  As a result,
 ``insopts`` now only affects ``doins``/``newins``, and ``exeopts`` only
 affects ``doexe``/``newexe``.  Furthermore, ``diropts`` do not affect
 the directories implicitly created by these helpers.
+
 
 .. _working directory:
 
