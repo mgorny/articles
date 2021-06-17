@@ -68,7 +68,7 @@ Install-time dependencies (IDEPEND)
 .. Note::
 
    TL;DR: ``IDEPEND`` specifies programs that you execute during
-   ``pkg_preinst`, ``pkg_postinst``, ``pkg_prerm`` and ``pkg_postrm``.
+   ``pkg_preinst``, ``pkg_postinst``, ``pkg_prerm`` and ``pkg_postrm``.
 
 
 Install-time dependencies are not a new idea.  It has been on the board
