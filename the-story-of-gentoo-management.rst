@@ -602,7 +602,7 @@ affairs of the Foundation.  In reply, Michael Palimaka points out that:
   current metastructure, it's not clear to me how this is even
   a Foundation issue.  [#PALIMAKA-20161109]_
 
-On 2007-01-05, Matthew Thode proposes:
+On 2017-01-05, Matthew Thode proposes:
 
   [...]
 
