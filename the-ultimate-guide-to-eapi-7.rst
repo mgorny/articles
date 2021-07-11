@@ -1152,6 +1152,11 @@ third-party repositories.
 
 package.provided is gone for good
 ---------------------------------
+.. Note::
+
+   This applies to use of ``package.provided`` in the repository.
+   It does not apply to the use in ``/etc/portage``.
+
 Finally, PMS bans the ``package.provided`` file from profiles in EAPI 7.
 This file could have been used to ‘pretend’ that some packages were
 installed while actually not using the relevant ebuilds.  This was
