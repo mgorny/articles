@@ -3,7 +3,7 @@ The ultimate guide to EAPI 7
 ============================
 :Author: Michał Górny
 :Date: 2018-05-03
-:Version: 1.0
+:Version: 1.1
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
@@ -369,18 +369,24 @@ appended.  When ``SYSROOT`` is different from ``ROOT``, pure build time
 dependencies (``DEPEND``) are installed to ``SYSROOT``, allowing users
 to save space on the filesystem running the actual target.
 
+.. Note::
+
+   Originally, ``ESYSROOT`` used ``EPREFIX`` unconditionally.  However,
+   the logic has been changed retroactively as described below.
+
 It was unclear whether ``SYSROOT`` should embed the offset prefix
 or not, and whether a different value of ``EPREFIX`` should be allowed
-for ``SYSROOT``.  Eventually, we concluded that using the same
-``EPREFIX`` is necessary for interoperability.  For example,
-if a library specified as a build-time dependency hardcodes a path
-to a file that is used at runtime, the path must match in both roots,
-and therefore its prefix has to match.
+for ``SYSROOT``.  Eventually, we have decided to use the following
+logic to keep things somewhat simple and working at the same time:
 
-The split into two variables intends to allow using ``SYSROOT`` with
-paths that have ``EPREFIX`` included already (e.g. paths obtained
-from various external tools).  Model matching ``ROOT``/``EROOT`` also
-reduces the risk of confusion.
+1. If ``SYSROOT`` is equal to ``ROOT``, then ``EPREFIX`` is used.
+   Effectively, ``ESYSROOT`` is equal to ``EROOT``.
+
+2. If ``SYSROOT`` is empty and ``ROOT`` is not empty, then ``BROOT``
+   is used.  Effectively, ``ESYSROOT`` is equal to ``BROOT``.
+
+3. Otherwise, no prefix is used and ``ESYSROOT`` is equal
+   to ``SYSROOT``.
 
 .. code-block:: bash
 
@@ -490,15 +496,15 @@ Finally, to help developers cope with all the logic, we have included
 a neat table that summarizes all the relevant interfaces for different
 dependency types.  It is included below for completeness.
 
-  ========================= ======= ======== ================
-  Dependency type           BDEPEND DEPEND   RDEPEND, PDEPEND
-  ========================= ======= ======== ================
-  Binary compatible with    CBUILD  CHOST    CHOST
-  Base unprefixed path      ``/``   SYSROOT  ROOT
-  Relevant offset-prefix    BROOT   EPREFIX  EPREFIX
-  Path combined with prefix BROOT   ESYSROOT EROOT
-  PM query command option   ``-b``  ``-d``   ``-r``
-  ========================= ======= ======== ================
+  ========================= ======= =========== ================
+  Dependency type           BDEPEND DEPEND      RDEPEND, PDEPEND
+  ========================= ======= =========== ================
+  Binary compatible with    CBUILD  CHOST       CHOST
+  Base unprefixed path      ``/``   SYSROOT     ROOT
+  Relevant offset-prefix    BROOT   (see above) EPREFIX
+  Path combined with prefix BROOT   ESYSROOT    EROOT
+  PM query command option   ``-b``  ``-d``      ``-r``
+  ========================= ======= =========== ================
 
 
 Version manipulation and comparison commands

@@ -114,12 +114,16 @@ The dependency types table for EAPI 8 is presented below.
   ------------------------- --------------- ------------------------
   Base unprefixed path      ``/``           SYSROOT  ROOT
   ------------------------- --------------- -------- ---------------
-  Relevant offset-prefix    BROOT           EPREFIX
-  ------------------------- --------------- ------------------------
+  Relevant offset-prefix    BROOT           (*)      EPREFIX
+  ------------------------- --------------- -------- ---------------
   Path combined with prefix BROOT           ESYSROOT EROOT
   ------------------------- --------------- -------- ---------------
   PM query command option   ``-b``          ``-d``   ``-r``
   ========================= =============== ======== ===============
+
+(*) The offset-prefix applicable to ``DEPEND`` depends on the values
+of ``ROOT`` and ``SYSROOT``.  This is explained in detail in the EAPI 7
+Guide.
 
 
 .. _fetch+:
