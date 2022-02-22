@@ -10,7 +10,8 @@ RST = \
 	the-impact-of-cxx-templates-on-library-abi.rst \
 	the-story-of-gentoo-management.rst \
 	the-ultimate-guide-to-eapi-7.rst \
-	the-ultimate-guide-to-eapi-8.rst
+	the-ultimate-guide-to-eapi-8.rst \
+	verify-sig-by-example.rst
 RST2HTML = $(patsubst %.rst,%.html,$(RST))
 HTML = $(RST2HTML) \
 	gentoo-management.css \
