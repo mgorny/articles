@@ -2,6 +2,7 @@ RST = \
 	a-short-history-of-gentoo-copyright.rst \
 	attack-on-git-signature-verification.rst \
 	copyright-primer.rst \
+	downstream-testing-python-packages.rst \
 	evolution-uid-trust-extrapolation.rst \
 	guru-a-new-model-of-contributing-to-gentoo.rst \
 	improving-distfile-mirror-structure.rst \
