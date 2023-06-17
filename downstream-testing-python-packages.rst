@@ -2,7 +2,7 @@
 Problems faced when downstream testing Python packages
 ======================================================
 :Author: Michał Górny
-:Date: 2023-06-16
+:Date: 2023-06-17
 :Version: draft
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
@@ -12,6 +12,7 @@ Problems faced when downstream testing Python packages
 
 Preamble
 ========
+
 *Downstream testing* refers to the testing of software package done
 by their redistributors, such as Linux distributions.  It could be done
 by distro-specific CI systems, package maintainers or — as it frequently
@@ -579,6 +580,28 @@ package.  Make sure that all files needed for them to pass are installed
 as well, and that the test suite can find them.  Finally, make sure that
 running it doesn't attempt to write into the installed package and
 doesn't result in any leftover files.
+
+
+Summary
+=======
+
+In this article, I have listed a fair number of problems and potential
+pitfalls regarding test suites.  Nevertheless, most of it could be
+summarized in a few sentences.
+
+Please consider your test suite not only as a tool for the project
+developers to test their work but also as a versatile tool for your
+users to use in order to ensure that the package is working correctly
+on as many systems as possible.  It is simply technically not possible
+to cover all possible scenarios with a continuous integration system,
+and users can provide valuable results from their test runs.
+
+Good support for downstream testing primarily falls into the topic
+of portability.  Make as few assumptions as possible, consider
+the possible limitations and provide means to customization.  Most
+importantly, be friendly and helpful when receiving bug reports.  We all
+share the common goal of delivering software that works as well
+as possible!
 
 
 References
