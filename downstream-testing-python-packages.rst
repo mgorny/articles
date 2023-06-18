@@ -2,8 +2,8 @@
 Problems faced when downstream testing Python packages
 ======================================================
 :Author: Michał Górny
-:Date: 2023-06-17
-:Version: draft
+:Date: 2023-06-18
+:Version: 1.0.0
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
