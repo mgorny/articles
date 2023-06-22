@@ -706,7 +706,7 @@ of the test restriction.  However, the recent versions of Portage
 include a new ``ALLOW_TEST`` configuration variable (for ``make.conf``)
 that can be used to elide test restriction.  If its value is set to
 ``network``, then test restriction will be ignored and the tests will
-be run on packages indicating ``network-test``.  This makes it
+be run on packages indicating ``test_network``.  This makes it
 an invaluable tool both for developers and arch testers.
 
 This feature was originally proposed for EAPI 8 as a new ``RESTRICT``
