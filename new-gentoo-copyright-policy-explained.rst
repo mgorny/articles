@@ -3,7 +3,7 @@ New Gentoo copyright policy explained (draft)
 =============================================
 :Author: Michał Górny
 :Date: 2018-10-25
-:Version: 1.1
+:Version: 1.2
 :Copyright: https://creativecommons.org/licenses/by/3.0/
 
 
@@ -161,7 +161,7 @@ and relicensing software, you can read my ‘copyright 101’ [#COPY-101]_.
   If you would like to use an open source license that is not explicitly
   permitted by this policy, please file a request to the Gentoo
   Foundation.  If the request is justified and the license in question
-  does not violate the Gentoo Social Contract, the Trustees will grant
+  does not violate the Gentoo Social Contract, the Council will grant
   you the possibility of using it.
 
 **What about non-free licenses?**
@@ -187,7 +187,7 @@ and relicensing software, you can read my ‘copyright 101’ [#COPY-101]_.
 **Will existing projects need to be relicensed?**
   If any Gentoo projects use free software licenses that aren't
   explicitly permitted by the policy, they will have to request
-  an explicit license exception from the Trustees.  If you choose
+  an explicit license exception from the Council.  If you choose
   to relicense your project instead, *please make sure to obtain
   permission from all copyright holders.*
 
@@ -243,8 +243,8 @@ into the project.
 In order to commit to any Gentoo project, you need to acknowledge
 the GCO by adding a *Signed-off-by* line to the footer of your commit
 (``git commit -s`` does that for you).  Since you're effectively making
-a legal statement, it is important that this line contains your real
-name and working e-mail address.
+a legal statement, it is important that this line contains your name
+and working e-mail address.
 
 To enable automatic sign-off addition in repoman, set the following
 variable in make.conf::
@@ -293,17 +293,13 @@ allowed to commit licenses this way!
   verified the signoff of the person above him, etc.
 
 **Do I have to use my real name?**
-  Yes, using real legal name (i.e. the name you use in officially signed
-  documents) is required.
+  No.  Starting with the version 1.3, the policy allows using a known
+  identity that can be a pseudonym, provided it's well established
+  online.
 
 **Do I have to use my primary e-mail address?**
   You need to use a working e-mail address that can be used to contact
   you.  It does not have to be your primary address.
-
-**Will Gentoo verify my real name?**
-  At the moment, there are no plans to request any evidence of your
-  real name.  However, we reserve the right to reject a contribution
-  when there is evidence that it was submitted under a pseudonym.
 
 **Why does Gentoo need a custom Certificate of Origin?**
   The Linux Kernel DCO fails to account for license files.  Those files
@@ -407,11 +403,19 @@ an ``AUTHORS`` file listing them.
   If you believe that the copyright in some file is not attributed
   correctly, please file a bug to the project.  If the maintainer does
   not reply or disagrees with you, you can escalate the issue to
-  the Trustees, providing evidence to your claims.
+  the Council, providing evidence to your claims.
 
 **Can multiple copyright holders be listed explicitly?**
   The policy technically allows listing multiple copyright holders
   but it is discouraged.
+
+
+Changelog
+=========
+
+v1.2 (2024-07-27)
+  Updates following the name policy change and responsibility shift
+  from Trustees to the Council.
 
 
 References
