@@ -74,7 +74,7 @@ clean:
 	$(MAKE) -C squashfs-deltas clean
 
 %.html: %.rst
-	rst2html5.py $< > $@
+	rst2html5 $< > $@
 
 reducing-squashfs-delta-size-through-partial-decompression.pdf:
 	$(MAKE) -C partial-squashfs-decompression all
